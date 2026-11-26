@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Player Questionnaire</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Source+Sans+3:wght@400;600;700&display=swap">
+<style>
+:root{--bg:#f3f5f1;--surface:#fff;--surface-2:#eaeee6;--line:#d3dacd;--fg:#18231c;--muted:#5b6a5f;--accent:#1f6b3a;--accent-fg:#fff;--ball:#a4161a;--warn-soft:#fbecd2;
+  --display:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;--body:"Source Sans 3",system-ui,-apple-system,"Segoe UI",sans-serif;--r:8px}
+@media (prefers-color-scheme: dark){:root{--bg:#111814;--surface:#18211b;--surface-2:#202b24;--line:#2f3d33;--fg:#e5ece6;--muted:#9aab9e;--accent:#5cbf7d;--accent-fg:#0d1a11;--ball:#f07a7d;--warn-soft:#3a2c14;color-scheme:dark}}
+*{box-sizing:border-box}html,body{margin:0}[hidden]{display:none!important}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;line-height:1.45}
+button,input,select,textarea{font:inherit;color:inherit}
+.top{background:#1d3557;color:#fff;padding:12px max(16px,env(safe-area-inset-right,0px)) 12px max(16px,env(safe-area-inset-left,0px));padding-top:calc(env(safe-area-inset-top,0px) + 12px);font-family:var(--display);font-size:19px;letter-spacing:.04em;text-transform:uppercase;position:sticky;top:0;z-index:2}
+.body{max-width:640px;margin:0 auto;padding-block:18px 60px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:16px}
+h1,h2{font-family:var(--display);font-weight:700;margin:0;line-height:1.05;text-wrap:balance}h2{font-size:30px}
+.lead{margin:0;color:var(--muted)}
+.q{display:grid;gap:14px}
+label.f{display:grid;gap:5px;font-weight:600}
+input[type=text],input[type=number],select,textarea{width:100%;background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:10px;font-size:16px;font-weight:400}
+textarea{min-height:80px;resize:vertical}
+.check{display:flex;gap:10px;align-items:flex-start;font-weight:400}.check input{width:20px;height:20px;margin-top:2px;accent-color:var(--accent)}
+.checks{display:grid;gap:8px;margin-top:4px}
+.prog{height:6px;background:var(--surface-2);border-radius:3px;overflow:hidden}.prog div{height:100%;background:var(--accent)}
+.stepn{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-top:-8px}
+.nav{display:flex;justify-content:space-between;gap:10px;margin-top:8px}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:6px;padding:12px 20px;font-weight:700;cursor:pointer}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+.btn:disabled{opacity:.6}
+.btn:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,.scale button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.rates{display:grid;gap:14px}
+.rate{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px}
+.rl{font-weight:600;margin-bottom:8px}
+.scale{display:grid;grid-template-columns:repeat(11,minmax(0,1fr));gap:3px}
+.scale button{height:42px;border:1px solid var(--line);background:var(--bg);border-radius:6px;font-weight:700;font-size:14px;cursor:pointer;padding:0}
+.scale button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+.alert{background:var(--warn-soft);border-radius:6px;padding:10px 12px}
+.note{font-size:13.5px;color:var(--muted)}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="js/config.js"></script>
+<script src="js/shared.js"></script>
+</head>
+<body>
+<div class="top" id="top">Player questionnaire</div>
+<main class="body" id="app"><p class="lead">Loading…</p></main>
+<script>
+(function(){
+"use strict";
+const cfg=window.APP_CONFIG||{};
+document.getElementById("top").textContent=(cfg.clubName||"Cricket club")+" player questionnaire";
+const code=(new URLSearchParams(location.hash.slice(1)).get("c")||new URLSearchParams(location.search).get("c")||"").trim();
+const sb=cfg.supabaseUrl&&!/YOUR-PROJECT/.test(cfg.supabaseUrl)?window.supabase.createClient(cfg.supabaseUrl,cfg.supabaseAnonKey,{auth:{persistSession:false}}):null;
+const app=document.getElementById("app");
+const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const KEY="q-draft-"+code;
+let ans={name:"",squad:"",ageGroup:"",consent:{},profile:{fmt:{}},ratings:{}},step=0,invite=null,blocked="",sending=false;
+try{const d=JSON.parse(localStorage.getItem(KEY)||"null");if(d&&d.ans){ans=d.ans;step=d.step||0}}catch(e){}
+const saveDraft=()=>{try{localStorage.setItem(KEY,JSON.stringify({ans,step}))}catch(e){}};
+const get=(o,p)=>p.split(".").reduce((a,k)=>a==null?a:a[k],o);
+function set(o,p,v){const k=p.split(".");let a=o;for(let i=0;i<k.length-1;i++){if(a[k[i]]==null)a[k[i]]={};a=a[k[i]]}a[k[k.length-1]]=v}
+const asP=()=>({ageGroup:ans.ageGroup,profile:ans.profile});
+function inp(path,label,o={}){const v=get(ans,path)??"",id="f-"+path.replace(/\./g,"-");
+  if(o.area)return `<label class="f" for="${id}">${esc(label)}<textarea id="${id}" data-k="${path}" placeholder="${esc(o.ph||"")}">${esc(v)}</textarea></label>`;
+  if(o.select)return `<label class="f" for="${id}">${esc(label)}<select id="${id}" data-k="${path}"><option value="">Choose…</option>${o.select.map(x=>`<option ${x===v?"selected":""}>${esc(x)}</option>`).join("")}</select></label>`;
+  return `<label class="f" for="${id}">${esc(label)}<input id="${id}" type="${o.type||"text"}" data-k="${path}" value="${esc(v)}" placeholder="${esc(o.ph||"")}" ${o.type==="number"?'inputmode="numeric" min="0"':""}></label>`}
+function chk(path,label){const id="f-"+path.replace(/\./g,"-");return `<label class="check" for="${id}"><input type="checkbox" id="${id}" data-k="${path}" ${get(ans,path)?"checked":""}><span>${esc(label)}</span></label>`}
+function steps(){const p=asP(),st=["about"];if(isJunior(p))st.push("consent");st.push("health","cricket","wants");areasFor(p).forEach(a=>st.push("rate:"+a.key));st.push("send");return st}
+function render(){
+  if(!invite){app.innerHTML=`<h2>This link isn't working</h2><p class="lead">Ask your coach to send you a new questionnaire link.</p>`;return}
+  if(step==="sent"){app.innerHTML=`<h2>Thank you${ans.name?", "+esc(ans.name.split(" ")[0]):""}!</h2><p class="lead">Your answers have gone to your coach. You can close this page.</p>`;return}
+  const st=steps();if(step>=st.length)step=st.length-1;const s=st[step],p=asP();let h="";
+  if(s==="about")h=`<h2>Hello${invite.first?" "+esc(invite.first):""}!</h2><p class="lead">This helps your coach plan your cricket around you. There are no wrong answers. It takes about 10 minutes.</p><div class="q">${inp("name","Your name",{ph:"First name and first letter of your surname"})}${inp("squad","Which squad do you play in?",{select:SQUADS})}${inp("ageGroup","Your age group",{select:AGE_GROUPS})}</div>`;
+  else if(s==="consent")h=`<h2>For your parent or guardian</h2><p class="lead">Please hand the phone to your parent or guardian for this part.</p><div class="q">${inp("consent.guardianName","Parent or guardian name")}${chk("consent.given","I agree to my child having a development plan, skills assessments and coaching records kept by their coach")}${chk("consent.photoVideo","I agree to photos and video for coaching use only")}${chk("consent.medicalShare","I'm happy for the medical information in the next step to be shared with the coach")}</div><p class="note">Answers go only to your child's coach. <a href="privacy.html" target="_blank" rel="noopener">How we use this information</a>.</p>`;
+  else if(s==="health")h=`<h2>Health and other sports</h2><div class="q">${inp("profile.injuries","Any injuries now, or in the last two years? Is anything still sore?",{area:1})}${inp("profile.medical","Any medical conditions your coach should know about? Only share what you're happy to.",{area:1,ph:"e.g. asthma, allergies"})}${inp("profile.otherSports","What other sports do you play or have you played?",{area:1})}</div>`;
+  else if(s==="cricket")h=`<h2>Your cricket</h2><div class="q">${inp("profile.batHand","How do you bat?",{select:["Right-handed","Left-handed"]})}${inp("profile.batPosition","Where do you like to bat?",{select:["Opener","Top order (3-4)","Middle order (5-6)","Lower order (7+)","No preference"]})}${inp("profile.bowlArm","Which arm do you bowl with?",{select:["Right-arm","Left-arm","Doesn't bowl"]})}${ans.profile.bowlArm==="Doesn't bowl"?"":inp("profile.bowlType","What type of bowler are you?",{select:BOWL_TYPES})}${inp("profile.keeper","Do you keep wicket?",{select:["Yes","No"]})}${inp("profile.role","What's your main role?",{select:["Batter","Bowler","Batting all-rounder","Bowling all-rounder","Wicket-keeper batter"]})}${inp("profile.seasons","How many seasons have you played?",{type:"number"})}${inp("profile.clubs","Clubs, schools or squads you've played for")}${inp("profile.highestLevel","Highest level you've played")}<div class="f">Which formats have you played?<div class="checks">${[["hard","Hardball"],["soft","Softball"],["t20","T20"],["sat","Saturday League"],["sun","Sunday"],["twoday","2-day"],["county","County age group"]].map(([k,l])=>chk("profile.fmt."+k,l)).join("")}</div></div></div>`;
+  else if(s==="wants")h=`<h2>What you want from cricket</h2><div class="q">${inp("profile.ambitionSeason","What do you want to achieve this season?",{area:1})}${inp("profile.ambitionLong","Where would you like your cricket to be in two or three years?",{area:1})}${inp("profile.enjoy","What do you enjoy most when you play?",{area:1})}${inp("profile.improve","What's the one thing you most want to get better at?",{area:1})}${inp("profile.learn","How do you learn best?",{area:1,ph:"Watching, being told, trying it, video…"})}</div>`;
+  else if(s.startsWith("rate:")){const area=areasFor(p).find(x=>x.key===s.slice(5));h=`<h2>Rate yourself: ${esc(area.name)}</h2><p class="lead">0 means you find it very hard and 10 means it's a real strength. Be honest. Skip anything you haven't tried.</p><div class="rates">${area.items.map(([k,l])=>`<div class="rate"><div class="rl">${esc(l)}</div><div class="scale" role="group" aria-label="${esc(l)}">${[0,1,2,3,4,5,6,7,8,9,10].map(n=>`<button type="button" data-r="${k}" data-v="${n}" aria-pressed="${ans.ratings[k]===n}">${n}</button>`).join("")}</div></div>`).join("")}</div>`}
+  else h=`<h2>Ready to send?</h2><p class="lead">Your answers go to your coach only. Use Back if you want to change anything.</p>`;
+  app.innerHTML=`<div class="prog"><div style="width:${Math.round(step/(st.length-1)*100)}%"></div></div><div class="stepn">Step ${step+1} of ${st.length}</div>${h}${blocked?`<div class="alert">${esc(blocked)}</div>`:""}
+   <div class="nav">${step>0?`<button class="btn" type="button" data-go="back">Back</button>`:"<span></span>"}<button class="btn primary" type="button" data-go="${s==="send"?"send":"next"}" ${sending?"disabled":""}>${s==="send"?(sending?"Sending…":"Send to my coach"):"Next"}</button></div>`;
+  window.scrollTo(0,0);
+}
+app.addEventListener("input",e=>{const k=e.target.dataset.k;if(!k)return;set(ans,k,e.target.type==="checkbox"?e.target.checked:e.target.value);saveDraft();if(k==="profile.bowlArm"&&e.type==="input"){}});
+app.addEventListener("change",e=>{const k=e.target.dataset.k;if(!k)return;set(ans,k,e.target.type==="checkbox"?e.target.checked:e.target.value);saveDraft();if(k==="profile.bowlArm")render()});
+app.addEventListener("click",async e=>{const r=e.target.closest("[data-r]");if(r){const k=r.dataset.r,v=+r.dataset.v;if(ans.ratings[k]===v)delete ans.ratings[k];else ans.ratings[k]=v;r.parentElement.querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",+b.dataset.v===ans.ratings[k]));saveDraft();return}
+  const g=e.target.closest("[data-go]");if(!g)return;const st=steps();blocked="";
+  if(g.dataset.go==="back"){step=Math.max(0,step-1)}
+  else if(g.dataset.go==="next"){
+    if(st[step]==="about"&&(!ans.name.trim()||!ans.ageGroup)){blocked="Please add your name and age group.";render();return}
+    if(st[step]==="consent"&&!ans.consent.given){blocked="A parent or guardian needs to tick the first box before you carry on.";render();return}
+    step++}
+  else if(g.dataset.go==="send"){sending=true;render();
+    const payload=Object.assign({},ans,{sentAt:new Date().toISOString()});
+    const keep=new Set(areasFor(asP()).flatMap(a=>a.items.map(i=>i[0])));payload.ratings=Object.fromEntries(Object.entries(ans.ratings).filter(([k])=>keep.has(k)));
+    const {data,error}=await sb.rpc("submit_questionnaire",{code,payload});sending=false;
+    if(error||data!==true){blocked="Your answers didn't send. Check your signal and try again. If it keeps failing, ask your coach for a new link.";render();return}
+    try{localStorage.removeItem(KEY)}catch(_){}step="sent"}
+  saveDraft();render()});
+(async()=>{if(!sb||code.length<10){render();return}
+  const {data,error}=await sb.rpc("get_invite",{code});invite=error?null:data;
+  if(invite){if(!ans.squad&&invite.squad)ans.squad=invite.squad;if(!ans.ageGroup&&invite.ageGroup)ans.ageGroup=invite.ageGroup}
+  render()})();
+})();
+</script>
+</body>
+</html>

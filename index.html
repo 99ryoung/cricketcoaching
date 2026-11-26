@@ -1,0 +1,941 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Fledbury Player IDPs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Source+Sans+3:wght@400;500;600;700&display=swap">
+<style>
+html,body{margin:0}[hidden]{display:none!important}img{max-width:100%}
+
+/* Layout: pavilion scoreboard header, roster rail on the left, player file with tabs on the right; stacks on phones. */
+:root{
+  --bg:#f3f5f1; --surface:#ffffff; --surface-2:#eaeee6; --line:#d3dacd;
+  --fg:#18231c; --muted:#5b6a5f; --accent:#1f6b3a; --accent-fg:#ffffff; --accent-soft:#dcebdf;
+  --ink:#1d3557; --ball:#a4161a; --amber:#b86e00; --good:#1f7a3f;
+  --bad-soft:#f8dede; --warn-soft:#fbecd2; --good-soft:#d9efdf;
+  --s1:#1f7a3f; --s2:#1d4f91; --s3:#c77700; --s4:#a4161a; --s5:#6b3fa0;
+  --display:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
+  --body:"Source Sans 3",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --r:8px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#111814; --surface:#18211b; --surface-2:#202b24; --line:#2f3d33;
+  --fg:#e5ece6; --muted:#9aab9e; --accent:#5cbf7d; --accent-fg:#0d1a11; --accent-soft:#1f3527;
+  --ink:#9cb8e3; --ball:#f07a7d; --amber:#f0b35a; --good:#6fd193;
+  --bad-soft:#3d1f20; --warn-soft:#3a2c14; --good-soft:#1a3524;
+  --s1:#6fd193; --s2:#7fa8ec; --s3:#f0b35a; --s4:#f07a7d; --s5:#c49bf0; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#111814; --surface:#18211b; --surface-2:#202b24; --line:#2f3d33;
+  --fg:#e5ece6; --muted:#9aab9e; --accent:#5cbf7d; --accent-fg:#0d1a11; --accent-soft:#1f3527;
+  --ink:#9cb8e3; --ball:#f07a7d; --amber:#f0b35a; --good:#6fd193;
+  --bad-soft:#3d1f20; --warn-soft:#3a2c14; --good-soft:#1a3524;
+  --s1:#6fd193; --s2:#7fa8ec; --s3:#f0b35a; --s4:#f07a7d; --s5:#c49bf0; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15px;line-height:1.45}
+h1,h2,h3{font-family:var(--display);font-weight:700;letter-spacing:.01em;margin:0;text-wrap:balance}
+button,input,select,textarea{font:inherit;color:inherit}
+.top{background:var(--ink);color:#fff;padding-block:14px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));margin-top:calc(-1 * env(safe-area-inset-top,0px));padding-top:calc(env(safe-area-inset-top,0px) + 14px)}
+:root[data-theme="dark"] .top{background:#16263d}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .top{background:#16263d}}
+.top-in{max-width:1280px;margin:0 auto;display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between}
+.brand h1{font-size:28px;line-height:1;text-transform:uppercase;letter-spacing:.04em}
+.brand p{margin:2px 0 0;font-size:13px;opacity:.8}
+.top .btn{border-color:rgba(255,255,255,.35);color:#fff;background:transparent}
+.top .btn:hover{background:rgba(255,255,255,.1)}
+.wrap{max-width:1280px;margin:0 auto;padding-block:18px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;grid-template-columns:290px minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:860px){.wrap{grid-template-columns:minmax(0,1fr)}}
+.btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--surface);border-radius:6px;padding:7px 12px;cursor:pointer;font-weight:600;font-size:14px}
+.btn:hover{background:var(--surface-2)}
+.btn.primary{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn.small{padding:4px 9px;font-size:13px}
+.btn.danger{color:var(--ball)}
+.btn:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,.tab:focus-visible,.pl:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.banner{grid-column:1/-1;border-radius:var(--r);padding:10px 14px;font-size:14px;background:var(--warn-soft);border:1px solid var(--line)}
+/* roster */
+.rail{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.rail-head{padding:12px 14px;border-bottom:1px solid var(--line);display:grid;gap:10px}
+.rail-head h2{font-size:20px;text-transform:uppercase;letter-spacing:.05em}
+.seg{display:flex;flex-wrap:wrap;gap:4px}
+.seg button{border:1px solid var(--line);background:transparent;border-radius:999px;padding:3px 10px;font-size:13px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+.plist{list-style:none;margin:0;padding:0;max-height:70vh;overflow:auto}
+@media (max-width:860px){.plist{max-height:none}}
+.pl{display:grid;gap:4px;padding:10px 14px;border-bottom:1px solid var(--line);cursor:pointer;width:100%;text-align:left;background:none;border-left:3px solid transparent;border-top:0;border-right:0}
+.pl:hover{background:var(--surface-2)}
+.pl[aria-current="true"]{background:var(--accent-soft);border-left-color:var(--accent)}
+.pl .nm{font-weight:700}
+.pl .meta{font-size:13px;color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:4px}
+.chip{font-size:11.5px;font-weight:600;letter-spacing:.03em;padding:1px 7px;border-radius:999px;background:var(--surface-2);color:var(--muted);white-space:nowrap}
+.chip.bad{background:var(--bad-soft);color:var(--ball)}
+.chip.warn{background:var(--warn-soft);color:var(--amber)}
+.chip.good{background:var(--good-soft);color:var(--good)}
+.chip.ex{background:var(--ink);color:#fff}
+.empty{padding:22px 16px;color:var(--muted);font-size:14px}
+/* main */
+.main{min-width:0;display:grid;gap:16px}
+.phead{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end;justify-content:space-between}
+.phead h2{font-size:34px;line-height:1}
+.phead .sub{color:var(--muted);margin-top:4px}
+.stats{display:flex;flex-wrap:wrap;gap:18px}
+.stat b{display:block;font-family:var(--display);font-size:26px;line-height:1;font-variant-numeric:tabular-nums}
+.stat span{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.tabs{display:flex;flex-wrap:wrap;gap:2px;border-bottom:2px solid var(--line)}
+.tab{background:none;border:0;padding:9px 14px;font-family:var(--display);font-size:18px;font-weight:600;letter-spacing:.03em;text-transform:uppercase;color:var(--muted);cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px;white-space:nowrap}
+.tab[aria-selected="true"]{color:var(--fg);border-bottom-color:var(--accent)}
+.panel{display:grid;gap:16px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;display:grid;gap:12px;align-content:start;min-width:0}
+.card h3{font-size:21px}
+.card .hint{color:var(--muted);font-size:13.5px;margin:-6px 0 0;max-width:70ch}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px 16px}
+.grid.wide{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+label.f{display:grid;gap:4px;font-size:13px;font-weight:600;color:var(--muted);min-width:0}
+label.f.full{grid-column:1/-1}
+input[type=text],input[type=date],input[type=time],input[type=number],input[type=url],select,textarea{width:100%;min-width:0;background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:7px 9px;font-size:15px;font-weight:400;color:var(--fg)}
+textarea{min-height:64px;resize:vertical}
+.check{display:flex;gap:8px;align-items:flex-start;font-size:14px}
+.check input{margin-top:3px;width:17px;height:17px;accent-color:var(--accent)}
+.note{font-size:13px;color:var(--muted)}
+.callout{border-radius:6px;padding:10px 12px;font-size:14px;background:var(--surface-2)}
+.callout.bad{background:var(--bad-soft)}
+.callout.warn{background:var(--warn-soft)}
+.callout.good{background:var(--good-soft)}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.spacer{flex:1}
+/* ratings */
+.radar-wrap{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:1050px){.radar-wrap{grid-template-columns:minmax(0,1fr)}}
+.radar svg{width:100%;height:auto;max-width:560px;display:block;margin:0 auto}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13.5px}
+.legend label{display:flex;gap:6px;align-items:center;cursor:pointer}
+.sw{width:12px;height:12px;border-radius:3px;display:inline-block}
+.tbl-wrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:14px;font-variant-numeric:tabular-nums}
+th,td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:600}
+td.n,th.n{text-align:right}
+.up{color:var(--good);font-weight:700}.down{color:var(--ball);font-weight:700}
+.rate-area{display:grid;gap:6px}
+.rate-area h4{margin:6px 0 0;font-family:var(--display);font-size:17px;text-transform:uppercase;letter-spacing:.05em;color:var(--accent)}
+.rate-row{display:grid;grid-template-columns:minmax(0,1fr) 140px 46px;gap:10px;align-items:center;font-size:14px}
+.rate-row input[type=range]{width:100%;accent-color:var(--accent)}
+.rate-row output{font-family:var(--display);font-size:20px;font-weight:700;text-align:right;font-variant-numeric:tabular-nums}
+.rate-row.na output{color:var(--muted);font-size:13px;font-family:var(--body);font-weight:400}
+/* bowling */
+.verdict{display:flex;gap:12px;align-items:center;border-radius:var(--r);padding:12px 14px}
+.verdict b{font-family:var(--display);font-size:26px;text-transform:uppercase;letter-spacing:.04em;line-height:1}
+.verdict ul{margin:4px 0 0;padding-left:18px;font-size:14px}
+.ecb{font-size:13.5px}
+.ecb td,.ecb th{padding:4px 8px}
+.ecb tr.me td{background:var(--accent-soft);font-weight:700}
+.eff-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;font-size:14px;padding:4px 0;border-bottom:1px solid var(--line)}
+.pips{display:flex;gap:3px}
+.pips button{width:30px;height:28px;border:1px solid var(--line);background:var(--bg);border-radius:5px;cursor:pointer;font-weight:700;font-size:13px}
+.pips button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+/* goals */
+.goal{border:1px solid var(--line);border-radius:var(--r);padding:14px;display:grid;gap:10px;background:var(--bg)}
+.goal-h{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.goal-h .corner{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--accent)}
+.act{display:grid;grid-template-columns:22px minmax(0,1fr) 130px 140px 30px;gap:8px;align-items:center}
+@media (max-width:640px){.act{grid-template-columns:22px minmax(0,1fr) 30px}.act .ao,.act .ad{grid-column:2/3}}
+.act.done input[type=text]{text-decoration:line-through;color:var(--muted)}
+.act.overdue input[type=date]{border-color:var(--ball);color:var(--ball)}
+.x{border:0;background:none;color:var(--muted);cursor:pointer;font-size:18px;line-height:1;padding:4px}
+.x:hover{color:var(--ball)}
+.welcome{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:28px;display:grid;gap:10px}
+.welcome h2{font-size:30px}
+.welcome ol{margin:0;padding-left:20px;display:grid;gap:4px}
+.confirm{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:14px}
+.bars{display:grid;gap:8px}
+.bar{display:grid;grid-template-columns:150px minmax(0,1fr) 40px;gap:10px;align-items:center;font-size:14px}
+.bar .track{height:10px;background:var(--surface-2);border-radius:5px;overflow:hidden}
+.bar .fill{height:100%;background:var(--accent);border-radius:5px}
+.bar b{text-align:right;font-variant-numeric:tabular-nums}
+.sw-grid{display:grid;align-items:start;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+ul.sk{list-style:none;margin:0;padding:0}
+ul.sk li{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px solid var(--line);font-size:14px}
+ul.sk li b{font-family:var(--display);font-size:20px;line-height:1}
+.goal .corner{display:block;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--accent);margin-bottom:2px}
+.sub-h{margin:6px 0 0;font-family:var(--display);font-size:17px;text-transform:uppercase;letter-spacing:.05em;color:var(--accent)}
+.dm-chart{display:grid;gap:8px}
+.dm-row{display:grid;grid-template-columns:70px minmax(0,1fr) 34px;gap:10px;align-items:center;font-size:14px;font-variant-numeric:tabular-nums}
+.dm-bar{display:flex;height:22px;border-radius:5px;overflow:hidden;background:var(--surface-2)}
+.dm-bar span{display:flex;align-items:center;justify-content:center;color:#fff;font-size:11.5px;font-weight:700;min-width:0}
+.dm-row b{text-align:right}
+#pm{position:fixed;inset:0;z-index:60;background:var(--bg);overflow-y:auto;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body.pm-on{overflow:hidden}
+.pm-top{position:sticky;top:0;z-index:2;background:#1d3557;color:#fff;display:flex;justify-content:space-between;align-items:center;gap:10px;padding-block:10px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));font-family:var(--display);font-size:18px;letter-spacing:.03em;text-transform:uppercase}
+.pm-body{max-width:640px;margin:0 auto;padding-block:18px 60px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:16px}
+.pm-body h2{font-size:30px;line-height:1.05}
+.pm-lead{margin:0;color:var(--muted);font-size:16px}
+.pm-q{display:grid;gap:14px}
+.pm-q label.f{font-size:15px;color:var(--fg)}
+.pm-q input,.pm-q select,.pm-q textarea{font-size:16px;padding:10px}
+.pm-checks{display:grid;gap:8px;margin-top:6px;font-weight:400;color:var(--fg)}
+.pm-prog{height:6px;background:var(--surface-2);border-radius:3px;overflow:hidden}.pm-prog div{height:100%;background:var(--accent)}
+.pm-stepn{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-top:-8px}
+.pm-nav{display:flex;justify-content:space-between;gap:10px;margin-top:8px}
+.pm-big{padding:12px 22px;font-size:16px}
+.pm-rates{display:grid;gap:14px}
+.pm-rate{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px}
+.pm-rl{font-weight:600;margin-bottom:8px}
+.pm-scale{display:grid;grid-template-columns:repeat(11,minmax(0,1fr));gap:3px}
+.pm-scale button{height:40px;border:1px solid var(--line);background:var(--bg);border-radius:6px;font-weight:700;font-size:14px;cursor:pointer;padding:0;color:var(--fg)}
+.pm-scale button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+<style>
+#login{position:fixed;inset:0;z-index:80;background:var(--bg);display:grid;place-items:center;padding:16px}
+#login form{width:100%;max-width:380px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:24px;display:grid;gap:12px}
+#login h1{font-family:var(--display);font-size:30px;margin:0;text-transform:uppercase;letter-spacing:.03em}
+.who{font-size:12.5px;opacity:.8;display:flex;gap:8px;align-items:center}
+.who button{background:none;border:0;color:inherit;text-decoration:underline;cursor:pointer;font-size:12.5px;padding:0}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="js/config.js"></script>
+<script src="js/backend.js" defer></script>
+</head>
+<body>
+<div id="login" hidden><form id="loginForm"><h1>Coach sign-in</h1><p class="note" style="margin:0">Enter the email address your coach account uses. We'll email you a sign-in link.</p><label class="f" for="loginEmail">Email<input type="email" id="loginEmail" autocomplete="email" required></label><button class="btn primary" type="submit">Email me a sign-in link</button><p class="note" id="loginMsg" style="margin:0"></p><p class="note" style="margin:0">Players: use the questionnaire link your coach sent you.</p></form></div>
+
+<header class="top">
+  <div class="top-in">
+    <div class="brand"><h1>Fledbury CC Coaching</h1><p>Individual Development Plans and baseline assessments</p><div class="who"><span id="whoami"></span><button type="button" id="signOut">Sign out</button></div></div>
+    <div class="row">
+      <button class="btn" id="copyQ" type="button">Copy player questionnaire</button>
+      <button class="btn" id="newHand" type="button">New player questionnaire</button>
+      <button class="btn primary" id="addPlayer" type="button">+ Add player</button>
+    </div>
+  </div>
+</header>
+
+<div id="pm" hidden><div class="pm-top"><b>Fledbury CC player questionnaire</b><span id="pmExit" class="row"></span></div><div id="pmBody" class="pm-body"></div></div>
+<div class="wrap">
+  <div class="banner" id="banner" hidden></div>
+  <aside class="rail">
+    <div class="rail-head">
+      <h2>Players</h2>
+      <div class="seg" id="squadFilter" role="group" aria-label="Filter by squad"></div>
+    </div>
+    <ul class="plist" id="plist"><li class="empty">Loading your players…</li></ul>
+  </aside>
+  <main class="main" id="main">
+    <section class="welcome">
+      <h2>Your players will appear here</h2>
+      <p>Add a player to start their file. Each file holds:</p>
+      <ol>
+        <li>A player-centred profile: injuries, other sports, experience, ambitions and preferences.</li>
+        <li>Skill ratings out of 10 from the player and from you, drawn as a spider chart against their baseline.</li>
+        <li>A bowling action check: safe first, then effective.</li>
+        <li>IDP goals with actions, owners, target dates and reviews.</li>
+      </ol>
+    </section>
+  </main>
+</div>
+
+<script>
+(function(){
+"use strict";
+/* ---------- reference data ---------- */
+const SQUADS=["Juniors","Seniors","Ladies"];
+const AGE_GROUPS=["U9","U10","U11","U12","U13","U14","U15","U16","U17","U18","U19","Adult"];
+const SKILLS=[
+ {key:"bat",name:"Batting",items:[["bat_grip","Grip, stance and set-up"],["bat_ff","Front-foot drives"],["bat_bf","Back-foot play (pull, cut)"],["bat_pace","Playing pace"],["bat_off","Playing the off side"],["bat_leg","Playing the leg side"],["bat_spin","Playing spin"],["bat_run","Running between the wickets"],["bat_rot","Rotating the strike"],["bat_power","Boundary and power hitting"]]},
+ {key:"shots",name:"Batting shots",detailOnly:true,items:[["sh_fd","Forward defensive"],["sh_cover","Cover drive"],["sh_square","Square drive"],["sh_on","On drive"],["sh_cut","Cut"],["sh_late","Late cut"],["sh_pull","Pull"],["sh_hook","Hook"],["sh_glance","Leg glance"],["sh_sweep","Sweep"],["sh_lap","Lap sweep"],["sh_slog","Slog sweep"],["sh_scoop","Scoop"],["sh_ramp","Ramp"]]},
+ {key:"bowl",name:"Bowling",items:[["bowl_acc","Line and length accuracy"],["bowl_seampos","Seam position"],["bowl_pace","Pace or spin and drift"],["bowl_var","Variations"],["bowl_new","New ball, swing and seam"],["bowl_death","Bowling at the death"],["bowl_spell","Consistency over a spell"]]},
+ {key:"field",name:"Fielding",items:[["fld_close","Close catching"],["fld_slip","Slip catching"],["fld_high","High catches"],["fld_ground","Ground fielding and pick-up"],["fld_throw","Throwing accuracy"],["fld_dist","Throwing distance"],["fld_antic","Anticipation and backing up"]]},
+ {key:"wk",name:"Wicket-keeping",items:[["wk_back","Standing back to pace"],["wk_up","Standing up to spin"],["wk_feet","Footwork and movement"],["wk_upseam","Standing up to seam bowlers"],["wk_catchup","Catching when stood up"],["wk_stump","Stumpings"],["wk_runout","Run-outs"]]},
+ {key:"fit",name:"Fitness",items:[["fit_speed","Speed (sprinting between wickets)"],["fit_agility","Agility and change of direction"],["fit_endur","Endurance across a full innings or day"],["fit_strength","Strength"],["fit_power","Power (jumping, throwing, hitting)"],["fit_mobility","Flexibility and mobility"],["fit_core","Core stability and balance"]]},
+ {key:"tac",name:"Tactical knowledge",items:[["tac_read","Reading the match situation"],["tac_inn","Building an innings"],["tac_field","Field placings"],["tac_plans","Bowling plans to batters"],["tac_laws","Laws and playing conditions"],["tac_comm","On-field communication"]]}
+];
+const SAFETY_CHECKS=[
+ ["align","Back-foot contact: hips and shoulders aligned the same way"],
+ ["flex","Trunk side-bend (lateral flexion) at release is controlled"],
+ ["frontleg","Front-foot landing in line, knee braced or controlled"],
+ ["follow","Follow-through decelerates safely, no twisting"],
+ ["arm","Arm action legal: no visible elbow straightening"],
+ ["runup","Run-up length and speed suit age and strength"]
+];
+const EFFECTIVE=[
+ ["rhythm","Run-up rhythm and approach"],["gather","Gather and load"],["bound","Bound and jump"],
+ ["frontarm","Front arm and alignment to target"],["release","Release position and height"],
+ ["wrist","Wrist, fingers and seam or revs"],["follow","Follow-through toward target"],
+ ["acc","Line and length under pressure"],["pace","Pace or revolutions"],["vary","Variations under control"]
+];
+const CORNERS=["Technical","Tactical","Physical","Psychological","Social"];
+const STATUSES=["Not started","In progress","Achieved","Paused"];
+const OWNERS=["Player","Coach","Player and coach","Parent or guardian"];
+function ecbLimit(ag){
+  if(!ag||ag==="Adult")return null;
+  const n=parseInt(ag.slice(1),10);
+  if(n<=13)return {spell:5,day:10,band:"Up to U13"};
+  if(n<=15)return {spell:6,day:12,band:"U14 and U15"};
+  return {spell:7,day:18,band:"U16 to U19"};
+}
+const DELIVERIES={
+ seam:{name:"Seam deliveries",items:[["dl_se_stock","Stock ball"],["dl_se_away","Away swinger"],["dl_se_in","Inswinger"],["dl_se_yorker","Yorker"],["dl_se_bouncer","Bouncer"],["dl_se_slower","Slower ball"]]},
+ off:{name:"Off-spin deliveries",items:[["dl_os_stock","Stock ball"],["dl_os_top","Top spinner"],["dl_os_arm","Arm ball"],["dl_os_carrom","Carrom ball"],["dl_os_quick","Quicker ball"]]},
+ leg:{name:"Leg-spin deliveries",items:[["dl_ls_stock","Stock ball"],["dl_ls_top","Top spinner"],["dl_ls_flipper","Flipper"],["dl_ls_googly","Googly"],["dl_ls_slider","Slider"],["dl_ls_quick","Quicker ball"]]}
+};
+const BOWL_TYPES=["Seam (fast)","Seam (fast-medium)","Seam (medium)","Off-spin","Left-arm orthodox (finger spin)","Leg-spin","Left-arm wrist spin"];
+const QUESTIONS=[
+ ["About you",["What should we call you, and which age group or team do you play in?","Do you have any injuries now, or any you've had in the last two years? Anything still sore?","Any medical conditions your coach should know about (asthma, diabetes, allergies)? Share only what you're happy to.","What other sports do you play or have you played? What do you enjoy about them?"]],
+ ["Your cricket so far",["How many seasons have you played, and for which clubs, schools or county squads?","What's the highest level you've played, and which formats (T20, 40 overs, timed or declaration)?","Do you think of yourself mainly as a batter, bowler or all-rounder?","Do you keep wicket?","Are you right- or left-handed with the bat? Which arm do you bowl with, and what type (seam, swing, off-spin, leg-spin, left-arm orthodox)?","Where do you like to bat in the order?"]],
+ ["What you want",["What do you want to achieve in cricket this season?","Where would you like your cricket to be in two or three years?","What do you enjoy most when you play?","What's the one thing you most want to get better at?","How do you learn best: watching, being told, trying it, video, or something else?"]],
+ ["Rate yourself (0 to 10)",SKILLS.map(a=>a.name+(a.key==="wk"?" (keepers only)":"")+": "+a.items.map(i=>i[1]).join("; ")).concat(["Your deliveries, seam bowlers: "+DELIVERIES.seam.items.map(i=>i[1]).join("; "),"Your deliveries, off-spinners: "+DELIVERIES.off.items.map(i=>i[1]).join("; "),"Your deliveries, leg-spinners: "+DELIVERIES.leg.items.map(i=>i[1]).join("; ")])]
+];
+/* ---------- state ---------- */
+let db=null, players={}, order=[], cur=null, tab="overview", filter="All";
+let local=null;                    // working copy of open player
+const saveState={timer:null,writing:false,again:false,dirty:false,lastJSON:""};
+let delAsk=null, radarMode="overview", seriesOn={}, editAssess=null, confirmDel=false;
+const $=s=>document.querySelector(s);
+const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const uid=()=>Math.random().toString(36).slice(2,10)+Date.now().toString(36).slice(-4);
+const today=()=>new Date().toISOString().slice(0,10);
+const fmtDate=d=>{if(!d)return"";const t=new Date(d+"T12:00:00");return isNaN(t)?d:t.toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"})};
+const clone=o=>JSON.parse(JSON.stringify(o));
+function blank(squad){return{name:"",squad:squad||"Seniors",ageGroup:"Adult",createdAt:today(),updatedAt:"",
+ consent:{guardianName:"",given:false,date:"",photoVideo:false,medicalShare:false},
+ profile:{injuries:"",medical:"",otherSports:"",seasons:"",clubs:"",highestLevel:"",formats:"",role:"",keeper:"",batHand:"",bowlArm:"",bowlType:"",batPosition:"",ambitionSeason:"",ambitionLong:"",enjoy:"",improve:"",learn:"",coachNotes:""},
+ assessments:[],bowling:{date:"",actionType:"",counterRot:"",pain:"",checks:{},spell:"",day:"",daysWeek:"",effective:{},video:"",notes:""},
+ goals:[],reviews:[],sessions:[],matchData:{seasons:[]},nextReview:""}}
+function norm(p){const b=blank();const o=Object.assign(b,p||{});o.consent=Object.assign(blank().consent,o.consent||{});o.profile=Object.assign(blank().profile,o.profile||{});if(!o.matchData||!Array.isArray(o.matchData.seasons))o.matchData={seasons:[]};o.matchData.seasons.forEach(x=>{if(!x.d)x.d={}});if(!SQUADS.includes(o.squad))o.squad=(o.ageGroup&&o.ageGroup!=="Adult")?"Juniors":"Seniors";if(!o.profile.fmt||typeof o.profile.fmt!=="object")o.profile.fmt={};if(["Fast","Fast-medium","Medium"].includes(o.profile.bowlType))o.profile.bowlType="Seam ("+o.profile.bowlType.toLowerCase()+")";if(o.profile.bowlType==="Left-arm orthodox")o.profile.bowlType="Left-arm orthodox (finger spin)";o.bowling=Object.assign(blank().bowling,o.bowling||{});o.bowling.checks=o.bowling.checks||{};o.bowling.effective=o.bowling.effective||{};["assessments","goals","reviews","sessions"].forEach(k=>{if(!Array.isArray(o[k]))o[k]=[]});o.goals.forEach(g=>{if(!Array.isArray(g.actions))g.actions=[]});return o}
+const isKeeper=p=>p.profile.keeper==="Yes"||p.profile.role==="Wicket-keeper batter";
+function bowlArea(p,a){const f=bowlFamily(p);const lab={bowl_pace:f==="seam"?"Swing":f?"Drift":"Swing or drift"};if(f==="seam")lab.bowl_new="New ball and seam movement";return Object.assign({},a,{items:a.items.map(([k,l])=>[k,lab[k]||l])})}
+const areasFor=(p,overview)=>{const L=SKILLS.filter(a=>(a.key!=="wk"||isKeeper(p))&&(a.key!=="bowl"||p.profile.bowlArm!=="Doesn't bowl")&&(!overview||!a.detailOnly)).map(a=>a.key==="bowl"?bowlArea(p,a):a);const d=!overview&&deliveryArea(p);if(d)L.splice(L.findIndex(a=>a.key==="bowl")+1,0,d);return L};
+const NUMW=["zero","one","two","three","four","five","six","seven","eight"];
+function bowlFamily(p){const t=p.profile.bowlType||"";if(p.profile.bowlArm==="Doesn't bowl"||!t)return null;if(t.startsWith("Seam"))return"seam";if(t==="Off-spin"||t.startsWith("Left-arm orthodox"))return"off";if(t==="Leg-spin"||t==="Left-arm wrist spin")return"leg";return null}
+function deliveryArea(p){const f=bowlFamily(p);return f?Object.assign({key:"deliv",detailOnly:true},DELIVERIES[f]):null}
+const isJunior=p=>p.ageGroup&&p.ageGroup!=="Adult";
+function getPath(o,path){return path.split(".").reduce((a,k)=>a==null?a:a[k],o)}
+function setPath(o,path,v){const ks=path.split(".");let a=o;for(let i=0;i<ks.length-1;i++){if(a[ks[i]]==null)a[ks[i]]={};a=a[ks[i]]}a[ks[ks.length-1]]=v}
+/* ---------- derived ---------- */
+function safety(p){
+  const b=p.bowling, reasons=[], concerns=[];let risk=false;
+  if(b.actionType==="Mixed"){risk=true;reasons.push("Mixed action: hips and shoulders point different ways at back-foot contact, the main risk factor for lower-back stress injury.")}
+  const cr=parseFloat(b.counterRot);
+  if(!isNaN(cr)&&cr>=30){risk=true;reasons.push("Shoulder counter-rotation of "+cr+"° is 30° or more.")}
+  else if(!isNaN(cr)&&cr>=20)concerns.push("Shoulder counter-rotation of "+cr+"° is close to the 30° threshold.");
+  if(b.pain==="Pain reported"){risk=true;reasons.push("Player reports back, side or shin pain when bowling. Stop and refer to a physio.")}
+  SAFETY_CHECKS.forEach(([k,l])=>{if(b.checks[k]==="concern")concerns.push("Concern flagged: "+l.charAt(0).toLowerCase()+l.slice(1)+".")});
+  const done=b.actionType&&b.pain&&SAFETY_CHECKS.every(([k])=>b.checks[k]);
+  let level="none",label="Not assessed";
+  if(risk){level="bad";label="Unsafe: act now"}
+  else if(concerns.length){level="warn";label="Safe, monitor"}
+  else if(done){level="good";label="Safe"}
+  else if(b.actionType||b.pain||Object.keys(b.checks).length){level="none";label="Incomplete"}
+  return{level,label,reasons,concerns};
+}
+function effAvg(p){const v=EFFECTIVE.map(([k])=>p.bowling.effective[k]).filter(x=>x>0);return v.length?(v.reduce((a,b)=>a+b,0)/v.length):null}
+function actionStats(p){let open=0,overdue=0,done=0;const t=today();p.goals.forEach(g=>g.actions.forEach(a=>{if(a.done)done++;else{open++;if(a.due&&a.due<t)overdue++}}));return{open,overdue,done}}
+function areaAvg(r,area){const v=area.items.map(([k])=>r[k]).filter(x=>typeof x==="number");return v.length?v.reduce((a,b)=>a+b,0)/v.length:null}
+function assessName(a){return (a.by==="coach"?"Coach":"Self")+" · "+(a.label||"Assessment")+(a.date?" · "+fmtDate(a.date):"")}
+/* ---------- persistence ---------- */
+function banner(msg){const b=$("#banner");if(msg){b.textContent=msg;b.hidden=false}else b.hidden=true}
+function scheduleSave(){
+  if(!local||!cur)return;
+  local.updatedAt=new Date().toISOString();
+  players[cur]=clone(local);
+  saveState.dirty=true;
+  clearTimeout(saveState.timer);
+  saveState.timer=setTimeout(flush,700);
+  renderRoster();
+}
+async function flush(){
+  if(!db||!cur){saveState.dirty=false;return}
+  if(saveState.writing){saveState.again=true;return}
+  saveState.writing=true;saveState.dirty=false;
+  const id=cur, body=clone(local);
+  saveState.lastJSON=JSON.stringify(body);
+  try{await db.collection("players").doc(id).set(body);banner("")}
+  catch(e){banner(e&&e.code==="quota_exceeded"?"Storage is full. Delete old players to free space.":"Couldn't save the last change ("+(e&&e.code||"error")+"). Keep this page open and try again.")}
+  saveState.writing=false;
+  if(saveState.again||saveState.dirty){saveState.again=false;flush()}
+}
+async function init(){
+  renderFilter();
+  let ready=false;
+  const t=setTimeout(()=>{if(!ready)banner("Can't reach saved players yet. Changes may not save until the connection returns.")},10000);
+  try{db=await window.coachBackend.ready()}catch(e){db=null}
+  if(!db){clearTimeout(t);ready=true;return}
+  refreshPending();
+  db.collection("players").onSnapshot(snap=>{
+    if(!snap.metadata.fromCache){ready=true;clearTimeout(t);banner("")}
+    const next={};snap.docs.forEach(d=>{next[d.id]=norm(d.data())});
+    if(cur&&next[cur]&&local){
+      const incoming=JSON.stringify(next[cur]);
+      if(saveState.dirty||saveState.writing||incoming===saveState.lastJSON||incoming===JSON.stringify(local)){next[cur]=clone(local)}
+      else{const focusIn=document.activeElement&&$("#main").contains(document.activeElement)&&document.activeElement.tagName!=="BUTTON";
+        if(!focusIn){local=clone(next[cur]);players=next;sortOrder();renderRoster();renderMain();return}
+        next[cur]=clone(local)}
+    }
+    players=next;sortOrder();renderRoster();
+    if(cur&&!players[cur]){cur=null;local=null;renderMain()}
+  },e=>{ready=true;clearTimeout(t);banner("Saved players couldn't be loaded ("+e.code+"). Reload the page to try again.")});
+}
+function sortOrder(){order=Object.keys(players).sort((a,b)=>{const A=players[a],B=players[b];return SQUADS.indexOf(A.squad)-SQUADS.indexOf(B.squad)||(A.name||"").localeCompare(B.name||"")})}
+/* ---------- roster ---------- */
+function renderFilter(){
+  $("#squadFilter").innerHTML=["All",...SQUADS].map(s=>`<button type="button" data-sq="${esc(s)}" aria-pressed="${s===filter}">${esc(s)}</button>`).join("");
+}
+$("#squadFilter").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;filter=b.dataset.sq;renderFilter();renderRoster()});
+function renderRoster(){
+  const ids=order.filter(id=>filter==="All"||players[id].squad===filter);
+  if(!ids.length){$("#plist").innerHTML=`<li class="empty">${order.length?"No players in this squad yet.":"No players yet. Use <b>+ Add player</b> to create the first file."}</li>`;return}
+  $("#plist").innerHTML=ids.map(id=>{const p=players[id],s=safety(p),a=actionStats(p);const chips=[];
+    if(p.example)chips.push(`<span class="chip ex">Example</span>`);
+    if(isJunior(p)&&!p.consent.given)chips.push(`<span class="chip bad">Consent needed</span>`);
+    if(s.level!=="none")chips.push(`<span class="chip ${s.level}">Bowling: ${esc(s.label)}</span>`);
+    if(a.overdue)chips.push(`<span class="chip bad">${a.overdue} overdue</span>`);
+    if(a.open)chips.push(`<span class="chip">${a.open} open action${a.open>1?"s":""}</span>`);
+    if(p.nextReview)chips.push(`<span class="chip ${p.nextReview<today()?"warn":""}">Review ${esc(fmtDate(p.nextReview))}</span>`);
+    return `<li><button type="button" class="pl" data-id="${esc(id)}" aria-current="${id===cur}"><span class="nm">${esc(p.name||"Unnamed player")}</span><span class="meta">${esc(p.squad)} · ${esc(p.ageGroup)}${p.profile.role?" · "+esc(p.profile.role):""}</span>${chips.length?`<span class="chips">${chips.join("")}</span>`:""}</button></li>`}).join("");
+}
+$("#plist").addEventListener("click",e=>{const b=e.target.closest(".pl");if(b)open(b.dataset.id)});
+function open(id){
+  if(saveState.dirty){clearTimeout(saveState.timer);flush()}
+  cur=id;local=clone(players[id]);saveState.lastJSON=JSON.stringify(local);confirmDel=false;editAssess=null;seriesOn={};curSession=null;dmSeason=null;dmMsg="";confirmSession=null;delAsk=null;radarMode="overview";
+  renderRoster();renderMain();
+  if(window.innerWidth<860)$("#main").scrollIntoView({behavior:"smooth",block:"start"});
+}
+$("#addPlayer").addEventListener("click",()=>{
+  const id=uid();const p=blank(filter!=="All"?filter:"Seniors");if(p.squad==="Juniors")p.ageGroup="U13";
+  players[id]=p;sortOrder();cur=id;local=clone(p);tab="profile";confirmDel=false;
+  saveState.dirty=true;flush();renderRoster();renderMain();
+  setTimeout(()=>{const n=document.getElementById("f-name");n&&n.focus()},30);
+});
+$("#copyQ").addEventListener("click",async()=>{
+  const txt="Fledbury CC: player questionnaire\nThere are no wrong answers. This helps us build your development plan around you.\n\n"+QUESTIONS.map(([h,qs])=>h.toUpperCase()+"\n"+qs.map((q,i)=>(i+1)+". "+q).join("\n")).join("\n\n")+"\n\nJuniors: please complete this with a parent or guardian.";
+  const btn=$("#copyQ");
+  try{await navigator.clipboard.writeText(txt);btn.textContent="Copied";setTimeout(()=>btn.textContent="Copy player questionnaire",1800)}
+  catch(e){showQuestionText(txt)}
+});
+function showQuestionText(txt){banner("");const b=$("#banner");b.hidden=false;b.innerHTML=`<div class="row"><b>Select and copy the questionnaire below</b><span class="spacer"></span><button class="btn small" type="button" id="closeQ">Close</button></div><textarea id="qtext" rows="10" style="margin-top:8px"></textarea>`;const ta=$("#qtext");ta.value=txt;ta.focus();ta.select();$("#closeQ").onclick=()=>banner("")}
+/* ---------- field helpers ---------- */
+function inp(path,label,opts={}){const v=getPath(local,path)??"";const id="f-"+path.replace(/\./g,"-");
+  if(opts.area)return `<label class="f ${opts.full?"full":""}" for="${id}">${esc(label)}<textarea id="${id}" data-k="${path}" placeholder="${esc(opts.ph||"")}">${esc(v)}</textarea></label>`;
+  if(opts.select)return `<label class="f ${opts.full?"full":""}" for="${id}">${esc(label)}<select id="${id}" data-k="${path}"><option value="">${esc(opts.none||"Choose…")}</option>${opts.select.map(o=>`<option ${o===v?"selected":""}>${esc(o)}</option>`).join("")}</select></label>`;
+  return `<label class="f ${opts.full?"full":""}" for="${id}">${esc(label)}<input id="${id}" type="${opts.type||"text"}" data-k="${path}" value="${esc(v)}" placeholder="${esc(opts.ph||"")}" ${opts.type==="number"?`inputmode="decimal" min="${opts.min??0}" ${opts.max!=null?`max="${opts.max}"`:""}`:""}></label>`}
+function chk(path,label){const id="f-"+path.replace(/\./g,"-");return `<label class="check" for="${id}"><input type="checkbox" id="${id}" data-k="${path}" ${getPath(local,path)?"checked":""}><span>${label}</span></label>`}
+/* ---------- main ---------- */
+function renderMain(){
+  const m=$("#main");
+  if(!cur||!local){m.innerHTML=`<section class="welcome"><h2>Pick a player</h2><p>Choose someone from the list, or add a new player to start their file.</p></section>`;return}
+  const p=local,s=safety(p),a=actionStats(p),goalsDone=p.goals.filter(g=>g.status==="Achieved").length;
+  const tabs=[["overview","Overview"],["profile","Player profile"],["skills","Skills radar"],["bowling","Bowling action"],["idp","IDP goals"],["training","Training"],["dismissals","Dismissals"],["reviews","Reviews"]];
+  m.innerHTML=`<section class="phead"><div><h2 id="hName">${esc(p.name||"Unnamed player")}</h2><div class="sub" id="hSub">${esc(p.squad)} · ${esc(p.ageGroup)}${p.example?" · Example player, delete when ready":""}</div></div>
+   <div class="row" style="gap:16px;align-items:flex-end"><button class="btn primary" type="button" data-act="handToPlayer">Hand to player</button><div class="stats"><div class="stat"><b>${p.assessments.length}</b><span>Assessments</span></div><div class="stat"><b>${goalsDone}/${p.goals.length}</b><span>Goals met</span></div><div class="stat"><b>${a.open}</b><span>Open actions</span></div><div class="stat"><b style="color:${a.overdue?"var(--ball)":"inherit"}">${a.overdue}</b><span>Overdue</span></div></div></div></section>
+   <div class="tabs" role="tablist">${tabs.map(([k,l])=>`<button type="button" class="tab" role="tab" data-tab="${k}" aria-selected="${k===tab}">${l}</button>`).join("")}</div>
+   <div class="panel" id="panel"></div>`;
+  renderPanel();
+}
+function renderPanel(){
+  const el=$("#panel");if(!el)return;
+  el.innerHTML=({overview:panelOverview,profile:panelProfile,skills:panelSkills,bowling:panelBowling,idp:panelIDP,training:panelTraining,dismissals:panelDismissals,reviews:panelReviews}[tab])();
+  if(tab==="skills")drawRadar();
+}
+function panelProfile(){const p=local,jr=isJunior(p);
+  return `<section class="card"><h3>Player details</h3>
+   <div class="grid">${inp("name","Name",{ph:jr?"First name and initial, e.g. Sam T":"e.g. Alex Morgan"})}${inp("squad","Squad",{select:SQUADS})}${inp("ageGroup","Age group",{select:AGE_GROUPS})}${inp("profile.role","Main role",{select:["Batter","Bowler","Batting all-rounder","Bowling all-rounder","Wicket-keeper batter"]})}${inp("profile.keeper","Do you keep wicket?",{select:["Yes","No"],none:"Not asked yet"})}</div>${isKeeper(p)?"":`<p class="note">Wicket-keeping is left out of the skills radar and ratings until this is set to Yes.</p>`}</section>
+  <section class="card"><h3>Cricket experience</h3>
+   <h4 style="margin:0;font-family:var(--display);font-size:17px;text-transform:uppercase;letter-spacing:.05em;color:var(--accent)">Batting and bowling</h4>
+   <div class="grid">${inp("profile.batHand","Bats",{select:["Right-handed","Left-handed"]})}${inp("profile.batPosition","Preferred batting position",{select:["Opener","Top order (3-4)","Middle order (5-6)","Lower order (7+)","No preference"]})}${inp("profile.bowlArm","Bowls",{select:["Right-arm","Left-arm","Doesn't bowl"]})}${inp("profile.bowlType","Bowler type",{select:BOWL_TYPES})}</div>
+   <h4 style="margin:6px 0 0;font-family:var(--display);font-size:17px;text-transform:uppercase;letter-spacing:.05em;color:var(--accent)">Playing history</h4>
+   <div class="grid">${inp("profile.seasons","Seasons played",{type:"number",max:60})}${inp("profile.clubs","Clubs, schools or squads")}${inp("profile.highestLevel","Highest level played",{ph:"e.g. County U15, Premier League 2nd XI"})}</div>
+   <div class="f" style="display:grid;gap:6px;font-size:13px;font-weight:600;color:var(--muted)">Formats played<div class="row" style="gap:6px 18px;color:var(--fg);font-weight:400">${[["hard","Hardball"],["soft","Softball"],["t20","T20"],["sat","Saturday League"],["sun","Sunday"],["twoday","2-day"],["county","County age group"]].map(([k,l])=>chk("profile.fmt."+k,l)).join("")}</div></div></section>
+  ${jr?`<section class="card"><h3>Junior safeguarding</h3><p class="hint">Keep personal data to a minimum: first name and initial, age group, no address, phone, school or date of birth. Emergency contacts stay in the club's own system, held by the Club Welfare Officer.</p>
+   ${p.consent.given?`<div class="callout good">Parent or guardian consent recorded${p.consent.date?" on "+esc(fmtDate(p.consent.date)):""}.</div>`:`<div class="callout bad">No parent or guardian consent recorded yet. Get consent before recording assessments or video.</div>`}
+   <div class="grid">${inp("consent.guardianName","Parent or guardian (name only)")}${inp("consent.date","Consent date",{type:"date"})}</div>
+   <div class="grid">${chk("consent.given","Parent or guardian agrees to this development plan and assessments")}${chk("consent.photoVideo","Consent for photos and video for coaching only")}${chk("consent.medicalShare","Medical information shared with consent")}</div></section>`:""}
+  <section class="card"><h3>Health and other sports</h3><p class="hint">Ask in the player's own words. Record only what's needed to coach them safely.</p>
+   <div class="grid wide">${inp("profile.injuries","Current or recent injuries (last two years)",{area:1,ph:"e.g. Side strain June, now pain-free"})}${inp("profile.medical","Medical conditions the coach should know",{area:1,ph:"e.g. Asthma, inhaler in kit bag"})}${inp("profile.otherSports","Other sports played",{area:1,ph:"e.g. Football (keeper), county hockey"})}</div></section>
+  <section class="card"><h3>Ambitions and preferences</h3>
+   <div class="grid wide">${inp("profile.ambitionSeason","What do you want to achieve this season?",{area:1})}${inp("profile.ambitionLong","Where do you want your cricket to be in 2-3 years?",{area:1})}${inp("profile.enjoy","What do you enjoy most when you play?",{area:1})}${inp("profile.improve","What do you most want to get better at?",{area:1})}${inp("profile.learn","How do you learn best?",{area:1,ph:"Watching, being told, trying it, video…"})}${inp("profile.coachNotes","Coach notes",{area:1})}</div></section>
+  <section class="card"><div class="row"><span class="note">Created ${esc(fmtDate(p.createdAt))}</span><span class="spacer"></span>
+   ${confirmDel?`<span class="confirm">Delete ${esc(p.name||"this player")} and all their records? <button class="btn small danger" type="button" data-act="delYes">Delete</button><button class="btn small" type="button" data-act="delNo">Keep</button></span>`:`<button class="btn small danger" type="button" data-act="delAsk">Delete player</button>`}</div></section>`;
+}
+/* ---------- skills ---------- */
+const SERIES_COLORS=["var(--s1)","var(--s2)","var(--s3)","var(--s4)","var(--s5)"];
+function defaultSeries(){const A=local.assessments;const on={};if(!A.length)return on;
+  const fs=A.find(a=>a.by==="self"),fc=A.find(a=>a.by==="coach");if(fs)on[fs.id]=true;if(fc)on[fc.id]=true;on[A[A.length-1].id]=true;return on}
+function panelSkills(){const A=local.assessments;
+  if(!Object.keys(seriesOn).length)seriesOn=defaultSeries();
+  if(!editAssess||!A.find(a=>a.id===editAssess))editAssess=A.length?A[A.length-1].id:null;
+  const ea=A.find(a=>a.id===editAssess);
+  const legend=A.map((a,i)=>`<span class="row" style="gap:2px"><label><input type="checkbox" data-series="${esc(a.id)}" ${seriesOn[a.id]?"checked":""}><span class="sw" style="background:${SERIES_COLORS[i%5]}"></span>${esc(assessName(a))}</label>${delAsk===a.id?`<span class="confirm" style="margin-left:6px">Delete? <button class="btn small danger" type="button" data-act="delAssessYes" data-aid="${esc(a.id)}">Delete</button><button class="btn small" type="button" data-act="delAssessNo">Keep</button></span>`:`<button class="x" type="button" data-act="delAssessAsk" data-aid="${esc(a.id)}" aria-label="Delete ${esc(assessName(a))}" title="Delete this assessment">×</button>`}</span>`).join("");
+  return `<section class="card"><div class="row"><h3>Skills spider chart</h3><span class="spacer"></span>
+    <button class="btn small" type="button" data-act="addSelf">+ Player self-rating</button><button class="btn small" type="button" data-act="addCoach">+ Coach rating</button></div>
+   <p class="hint">The first self-rating is the player's baseline. Add a coach rating to compare views, then re-assess each block to see progress overlaid on the baseline. Ratings are out of 10; leave a skill unrated if it doesn't apply. Batting shots and the player's deliveries (set by bowler type in the profile) have their own charts under Show. Wicket-keeping appears once the profile says the player keeps wicket.</p>
+   ${A.length?`<div class="radar-wrap"><div class="radar"><div class="row" style="margin-bottom:8px"><label class="f" for="radarMode" style="min-width:200px">Show<select id="radarMode"><option value="overview">All ${NUMW[areasFor(local,true).length]} areas (averages)</option>${areasFor(local).map(s=>`<option value="${s.key}" ${radarMode===s.key?"selected":""}>${esc(s.name)} in detail</option>`).join("")}</select></label></div><div id="radarSvg"></div><div class="legend">${legend}</div></div>
+    <div class="tbl-wrap" id="cmpTbl"></div></div>`:`<div class="callout">No ratings yet. Start with <b>+ Player self-rating</b> to record the baseline.</div>`}
+  </section>
+  ${ea?`<section class="card"><div class="row"><h3>Edit ratings</h3><span class="spacer"></span><label class="f" for="pickAssess" style="min-width:240px">Assessment<select id="pickAssess">${A.map(a=>`<option value="${esc(a.id)}" ${a.id===ea.id?"selected":""}>${esc(assessName(a))}</option>`).join("")}</select></label></div>
+   ${assessEditor(ea)}</section>`:""}`;
+}
+function assessEditor(a){const i=local.assessments.indexOf(a);const base="assessments."+i;
+  return `<div class="grid">${inp(base+".label","Label",{select:["Baseline","Pre-season","Mid-season","End of season","Block review"]})}${inp(base+".date","Date",{type:"date"})}${inp(base+".by","Rated by",{select:["self","coach"],none:"Choose…"})}</div>
+  <div class="grid wide">${areasFor(local).map(area=>`<div class="rate-area"><h4>${esc(area.name)}</h4>${area.items.map(([k,l])=>{const v=a.ratings[k];const has=typeof v==="number";return `<div class="rate-row ${has?"":"na"}"><label for="r-${k}">${esc(l)}</label><input type="range" id="r-${k}" min="0" max="10" step="1" value="${has?v:5}" data-rate="${k}" aria-label="${esc(l)} rating"><output id="o-${k}">${has?v:"—"}</output></div>`}).join("")}</div>`).join("")}</div>
+  <div class="row"><span class="note">Drag a slider to rate. Unrated skills show a dash and are left out of averages.</span><span class="spacer"></span><button class="btn small" type="button" data-act="clearRate">Clear ratings</button><button class="btn small danger" type="button" data-act="delAssess">Delete assessment</button></div>`}
+function radarData(){const A=local.assessments;const on=A.map((a,i)=>({a,color:SERIES_COLORS[i%5]})).filter(x=>seriesOn[x.a.id]);
+  const OV=areasFor(local,true);if(radarMode!=="overview"&&!areasFor(local).some(s=>s.key===radarMode))radarMode="overview";
+  if(radarMode==="overview")return{axes:OV.map(s=>s.name),series:on.map(x=>({name:assessName(x.a),color:x.color,vals:OV.map(s=>areaAvg(x.a.ratings,s))}))};
+  const area=areasFor(local).find(s=>s.key===radarMode);return{axes:area.items.map(i=>i[1]),series:on.map(x=>({name:assessName(x.a),color:x.color,vals:area.items.map(([k])=>typeof x.a.ratings[k]==="number"?x.a.ratings[k]:null)}))}}
+function drawRadar(){const box=$("#radarSvg");if(!box)return;const {axes,series}=radarData();
+  const W=640,H=500,cx=320,cy=250,R=165,n=axes.length;
+  const pt=(i,v)=>{const ang=-Math.PI/2+i*2*Math.PI/n;return[cx+Math.cos(ang)*R*v/10,cy+Math.sin(ang)*R*v/10]};
+  let g="";
+  for(let l=2;l<=10;l+=2){g+=`<polygon points="${axes.map((_,i)=>pt(i,l).join(",")).join(" ")}" fill="none" stroke="var(--line)" stroke-width="1"/>`;
+    const [x,y]=pt(0,l);g+=`<text x="${x+4}" y="${y+4}" font-size="13" fill="var(--muted)">${l}</text>`}
+  axes.forEach((ax,i)=>{const [x,y]=pt(i,10);g+=`<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="var(--line)"/>`;
+    const [lx,ly]=pt(i,11.6);const anchor=Math.abs(lx-cx)<8?"middle":lx>cx?"start":"end";
+    const words=wrapLabel(ax,radarMode==="overview"?14:16);
+    g+=`<text x="${lx}" y="${ly-(words.length-1)*9.5+5}" text-anchor="${anchor}" font-size="17" font-weight="600" fill="var(--fg)">${words.map((w,j)=>`<tspan x="${lx}" dy="${j?19:0}">${esc(w)}</tspan>`).join("")}</text>`});
+  series.forEach(s=>{const pts=s.vals.map((v,i)=>pt(i,v??0));
+    g+=`<polygon points="${pts.map(p=>p.join(",")).join(" ")}" fill="${s.color}" fill-opacity=".14" stroke="${s.color}" stroke-width="2.5" stroke-linejoin="round"/>`;
+    pts.forEach((p,i)=>{if(s.vals[i]!=null)g+=`<circle cx="${p[0]}" cy="${p[1]}" r="3.5" fill="${s.color}"><title>${esc(s.name)}: ${esc(axes[i])} ${s.vals[i].toFixed(1)}</title></circle>`})});
+  box.innerHTML=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Spider chart of skill ratings out of 10">${g}</svg>${series.length?"":`<p class="note" style="text-align:center">Tick an assessment below to draw it.</p>`}`;
+  drawTable(axes,series);
+}
+function wrapLabel(t,max){const w=t.split(" ");const out=[];let line="";w.forEach(x=>{if((line+" "+x).trim().length>max&&line){out.push(line);line=x}else line=(line+" "+x).trim()});if(line)out.push(line);return out}
+function drawTable(axes,series){const el=$("#cmpTbl");if(!el)return;
+  if(!series.length){el.innerHTML="";return}
+  const showChange=series.length>=2;
+  el.innerHTML=`<table><thead><tr><th>${radarMode==="overview"?"Area":"Skill"}</th>${series.map(s=>`<th class="n"><span class="sw" style="background:${s.color}"></span></th>`).join("")}${showChange?`<th class="n">Change</th>`:""}</tr></thead><tbody>${axes.map((ax,i)=>{const vals=series.map(s=>s.vals[i]);const f=vals[0],l=vals[vals.length-1];let ch="";
+    if(showChange&&f!=null&&l!=null){const d=l-f;ch=`<td class="n ${d>0.05?"up":d<-0.05?"down":""}">${d>0?"+":""}${d.toFixed(1)}</td>`}else if(showChange)ch=`<td class="n">—</td>`;
+    return `<tr><td>${esc(ax)}</td>${vals.map(v=>`<td class="n">${v==null?"—":v.toFixed(radarMode==="overview"?1:0)}</td>`).join("")}${ch}</tr>`}).join("")}</tbody></table>
+   ${showChange?`<p class="note">Change compares the first and last ticked assessments, in the order shown in the key.</p>`:""}`}
+/* ---------- bowling ---------- */
+function panelBowling(){const p=local,b=p.bowling,s=safety(p),lim=ecbLimit(p.ageGroup),eff=effAvg(p);
+  return `<section class="card"><h3>1. Is the action safe?</h3>
+   <p class="hint">Assess from side-on and front-on video at full pace where possible. Safety comes before effectiveness: don't add pace to an action that isn't safe.</p>
+   <div id="verdictBox">${verdictHTML(s)}</div>
+   <div class="grid">${inp("bowling.date","Date of analysis",{type:"date"})}${inp("bowling.actionType","Action type at back-foot contact",{select:["Side-on","Front-on","Semi-open","Mixed"]})}${inp("bowling.counterRot","Shoulder counter-rotation (degrees, estimate)",{type:"number",max:90,ph:"e.g. 15"})}${inp("bowling.pain","Pain when bowling (back, side, shins)",{select:["No pain reported","Pain reported"],none:"Not asked yet"})}</div>
+   <div class="tbl-wrap"><table><thead><tr><th>Safety check</th><th style="width:170px">Result</th></tr></thead><tbody>${SAFETY_CHECKS.map(([k,l])=>`<tr><td>${esc(l)}</td><td><select data-k="bowling.checks.${k}" aria-label="${esc(l)}"><option value="">Not checked</option><option value="ok" ${b.checks[k]==="ok"?"selected":""}>Looks fine</option><option value="concern" ${b.checks[k]==="concern"?"selected":""}>Concern</option></select></td></tr>`).join("")}</tbody></table></div>
+   ${bowlFamily(p)==="seam"?`<h3 style="font-size:18px;margin-top:4px">ECB fast bowling directives</h3><div class="tbl-wrap"><table class="ecb"><thead><tr><th>Age group</th><th class="n">Max overs per spell</th><th class="n">Max overs per day</th></tr></thead><tbody>
+     <tr class="${lim&&lim.band==="Up to U13"?"me":""}"><td>Up to U13</td><td class="n">5</td><td class="n">10</td></tr><tr class="${lim&&lim.band==="U14 and U15"?"me":""}"><td>U14 and U15</td><td class="n">6</td><td class="n">12</td></tr><tr class="${lim&&lim.band==="U16 to U19"?"me":""}"><td>U16 to U19</td><td class="n">7</td><td class="n">18</td></tr></tbody></table></div>
+     <p class="note">After a spell, a junior fast bowler can't bowl again from either end until the same number of overs has passed. These figures apply to fast bowlers; check the current ECB directives at the start of each season as they are revised.${lim?"":" This player is an adult, so the limits are for reference only."}</p>`:""}
+  </section>
+  <section class="card"><h3>2. Is the action effective?</h3>
+   ${s.level==="bad"?`<div class="callout bad">Fix the safety issues above first. Effectiveness ratings are a record only until the action is safe.</div>`:""}
+   <p class="hint">Rate each phase 1 (needs a lot of work) to 5 (excellent).</p>
+   <div>${EFFECTIVE.map(([k,l])=>`<div class="eff-row"><span>${esc(l)}</span><div class="pips" role="group" aria-label="${esc(l)}">${[1,2,3,4,5].map(n=>`<button type="button" data-eff="${k}" data-v="${n}" aria-pressed="${b.effective[k]===n}">${n}</button>`).join("")}</div></div>`).join("")}</div>
+   <div class="callout" id="effBox">${effHTML(eff)}</div>
+   <div class="grid wide">${inp("bowling.video","Video link (https)",{type:"url",ph:"https://…"})}${inp("bowling.notes","Key coaching points and drills",{area:1})}</div>
+   ${/^https:\/\//.test(b.video||"")?`<a href="${esc(b.video)}" target="_blank" rel="noopener">Open bowling video</a>`:""}
+  </section>`}
+function verdictHTML(s){const cls={bad:"bad",warn:"warn",good:"good",none:""}[s.level];
+  const list=[...s.reasons,...s.concerns];
+  return `<div class="verdict callout ${cls}"><div><b>${esc(s.label)}</b>${list.length?`<ul>${list.map(r=>`<li>${esc(r)}</li>`).join("")}</ul>`:`<div class="note">${s.level==="good"?"All safety checks passed.":"Complete the action type, pain question and every check for a verdict."}</div>`}</div></div>`}
+function effHTML(e){return e==null?"No effectiveness ratings yet.":`<b>Effectiveness ${e.toFixed(1)} / 5</b> · ${e>=4?"A strong, repeatable action.":e>=3?"Sound base with clear areas to sharpen.":"Several phases need work. Pick one or two for the IDP."}`}
+/* ---------- IDP ---------- */
+/* ---------- suggested development areas ---------- */
+/* ---------- overview ---------- */
+function allNames(p){const m={};areasFor(p).forEach(a=>a.items.forEach(([k,l])=>m[k]=[l,a.name]));return m}
+function bowlerPlan(p){
+  const {r}=ratingBasis(p);const v=k=>typeof r[k]==="number"?r[k]:null;
+  const hi=(k,t=7)=>v(k)!=null&&v(k)>=t, lo=(k,t=4)=>v(k)!=null&&v(k)<=t;
+  const avg=ks=>{const x=ks.map(v).filter(n=>n!=null);return x.length?x.reduce((a,b)=>a+b,0)/x.length:null};
+  const off=avg(["bat_off","sh_cover","sh_square","sh_cut","sh_late"]), leg=avg(["bat_leg","sh_on","sh_glance","sh_pull","sh_sweep"]);
+  const P=[];const add=(plan,field,prep)=>P.push({plan,field,prep});
+  if(off!=null&&leg!=null&&off-leg>=1.5)add("Strong on the off side, weaker on the leg side. Bowlers will attack the stumps and target leg stump, giving no width outside off.","Off side kept tight with cover and point saving one; short midwicket and square leg to cut off the leg-side single.","Leg-side work: on drive, leg glance and clipping off the pads. Leave or block well outside off when width is denied.");
+  else if(off!=null&&leg!=null&&leg-off>=1.5)add("Strong on the leg side, weaker on the off side. Bowlers will bowl a fourth or fifth stump line outside off and deny anything on the pads.","Packed off side: slips, gully, point and cover. Leg side left open to tempt the drive across the line.","Off-side driving and judging when to leave. Play straight to balls in the channel.");
+  if(lo("bat_bf")||lo("sh_pull")||lo("sh_hook")||lo("bat_pace"))add("Struggles against the short ball. Quick bowlers will use bouncers and back-of-a-length balls into the body.","Fine leg and deep square leg back for the top edge; short leg for the fend.","Pull and hook decision-making, plus leaving or riding the short ball safely.");
+  if(lo("bat_ff")||lo("sh_cover")||lo("sh_fd"))add("Less secure on the front foot. Bowlers will pitch it up just outside off to draw a drive or an edge.","Two slips and a gully, with catching cover or short extra cover.","Forward defence with soft hands, head over the ball, and driving only when it's full enough.");
+  if(lo("bat_spin"))add("Weaker against spin. Captains will bring a spinner on early, especially one turning the ball away from the bat.","Slip and short leg or silly point for the bat-pad catch; mid-on and mid-off up.","Footwork to spin, using the crease and sweeping to disrupt length.");
+  else if(hi("sh_sweep")||hi("sh_slog"))add("Sweeps well, so spinners will bowl quicker and straighter to cramp the sweep.","Fine leg and deep square leg back.","Have a second option against spin, such as going down the pitch or playing late.");
+  if(lo("bat_rot")||lo("bat_run"))add("Finds it hard to rotate the strike. Bowlers will bowl tight, dry up the runs and build dot-ball pressure until a rash shot comes.","Ring field saving the single; men on the 30-yard line.","Strike rotation: soft hands, working into gaps and clear calling.");
+  if(lo("bat_power"))add("Limited boundary options. Fielders will stay in the ring and bowlers can attack without fearing boundaries.","Attacking ring field with catchers in.","Develop one or two boundary options.");
+  else if(hi("bat_power"))add("A strong boundary hitter. Bowlers will bowl back of a length, take pace off and aim for the blockhole at the death.","Boundary riders at long-on, long-off and deep midwicket.","Rotate the strike when the boundary isn't on, and have a plan against slower balls.");
+  if(lo("bat_run")||lo("fit_speed"))add("Not quick between the wickets. Fielders will attack the ball and shy at the stumps.","Fielders in close on the single.","Calling, backing up and sprint starts.");
+  if(p.profile.batHand==="Left-handed")add("Left-hander. Right-arm seamers will angle the ball across from over the wicket, and off-spinners will turn it away.","Slips and gully for the angle across.","Know where off stump is, and play the ball spinning away from the bat with the full face.");
+  return P;
+}
+function panelOverview(){const p=local,{r,lc,ls}=ratingBasis(p),N=allNames(p);
+  const keys=new Set(areasFor(p).flatMap(a=>a.items.map(i=>i[0])));
+  const rated=Object.entries(r).filter(([k])=>keys.has(k)&&N[k]);
+  const strong=rated.filter(([,v])=>v>=7).sort((a,b)=>b[1]-a[1]), weak=rated.filter(([,v])=>v<=4).sort((a,b)=>a[1]-b[1]);
+  const areas=areasFor(p,true).map(a=>[a.name,areaAvg(r,a)]);
+  const s=safety(p), a=actionStats(p), plan=bowlerPlan(p), sug=suggestions(p).slice(0,3);
+  const item=([k,v],cls)=>`<li><span>${esc(N[k][0])} <span class="note">${esc(N[k][1])}</span></span><b class="${cls}">${v}</b></li>`;
+  const basis=[lc&&("coach rating "+fmtDate(lc.date)),ls&&("self-rating "+fmtDate(ls.date))].filter(Boolean).join(" and ");
+  return `<section class="card"><h3>At a glance</h3>
+   ${basis?`<p class="hint">From the latest ${esc(basis)}${lc?" (coach scores take priority)":""}. 7 or more is a strength; 4 or below is an area to develop.</p>`:`<div class="callout">No ratings yet. Add a self-rating in Skills radar to build this overview.</div>`}
+   <div class="bars">${areas.map(([n,v])=>`<div class="bar"><span>${esc(n)}</span><div class="track"><div class="fill" style="width:${v==null?0:v*10}%"></div></div><b>${v==null?"—":v.toFixed(1)}</b></div>`).join("")}</div>
+   <div class="chips">${p.profile.role?`<span class="chip">${esc(p.profile.role)}</span>`:""}${p.profile.batHand?`<span class="chip">${esc(p.profile.batHand)}</span>`:""}${p.profile.bowlType&&p.profile.bowlArm!=="Doesn't bowl"?`<span class="chip">${esc(p.profile.bowlArm||"")} ${esc(p.profile.bowlType)}</span>`:""}${s.level!=="none"?`<span class="chip ${s.level}">Bowling action: ${esc(s.label)}</span>`:""}<span class="chip">${p.goals.length} goal${p.goals.length===1?"":"s"}, ${a.open} open action${a.open===1?"":"s"}</span>${a.overdue?`<span class="chip bad">${a.overdue} overdue</span>`:""}</div>
+  </section>
+  ${basis?`<div class="sw-grid"><section class="card"><h3>Strengths</h3>${strong.length?`<ul class="sk">${strong.slice(0,10).map(x=>item(x,"up")).join("")}</ul>`:`<p class="note">Nothing rated 7 or above yet.</p>`}</section>
+   <section class="card"><h3>Areas to develop</h3>${weak.length?`<ul class="sk">${weak.slice(0,10).map(x=>item(x,"down")).join("")}</ul>`:`<p class="note">Nothing rated 4 or below.</p>`}${sug.length?`<p class="note">Top suggestions: ${sug.map(x=>esc(x.title)).join(", ")}. See IDP goals.</p>`:""}</section></div>`:""}
+  ${basis?`<section class="card"><h3>How a bowler would plan to get them out</h3><p class="hint">Read the batting ratings as an opposition captain would. Use these plans to prepare the player for what they'll face.</p>
+   ${plan.length?plan.map(x=>`<div class="goal"><b>${esc(x.plan)}</b><div class="grid wide"><div><span class="corner">Likely field</span><div>${esc(x.field)}</div></div><div><span class="corner">Prepare them by</span><div>${esc(x.prep)}</div></div></div></div>`).join(""):`<p class="note">No clear weak spot for a bowler to target in the current ratings. Rate the batting shots in Skills radar for a sharper plan.</p>`}</section>`:""}`;
+}
+let showAllSugg=false;
+function ratingBasis(p){const A=p.assessments.slice().sort((a,b)=>(a.date||"").localeCompare(b.date||""));
+  const coach=A.filter(a=>a.by==="coach"),self=A.filter(a=>a.by==="self");
+  const lc=coach[coach.length-1],ls=self[self.length-1];const r={};
+  [ls,lc].forEach(a=>{if(a)Object.entries(a.ratings||{}).forEach(([k,v])=>{if(typeof v==="number")r[k]=v})});
+  return{r,lc,ls};}
+function suggestions(p){
+  const {r,lc,ls}=ratingBasis(p);const out=[];
+  const v=k=>typeof r[k]==="number"?r[k]:null;
+  const low=(k,t=4)=>v(k)!=null&&v(k)<=t;
+  const nm=k=>{for(const a of [...SKILLS,...Object.values(DELIVERIES)])for(const [kk,l] of a.items)if(kk===k)return l;return k};
+  const sc=ks=>ks.filter(k=>v(k)!=null).map(k=>nm(k)+" "+v(k)).join(", ");
+  const add=(o)=>out.push(o);
+  const bowls=p.profile.bowlArm!=="Doesn't bowl", fam=bowlFamily(p), keeper=isKeeper(p), jr=isJunior(p);
+  const safe=safety(p);
+  if(bowls&&safe.level==="bad")add({pri:0,corner:"Physical",area:"Bowling",title:"Make the bowling action safe",why:"Bowling action check: "+safe.reasons[0],
+    goal:"Bowl with a safe action (no mixed action, counter-rotation under 30°, pain-free) in nets and matches",measure:"Repeat side-on and front-on video shows a safe action at full pace",
+    acts:[["Refer to physio if any pain is reported","Coach"],["Film action side-on and front-on and agree one change","Coach"],["Slow-motion and walk-through drills for the agreed change, 3 times a week","Player"]]});
+  if(!Object.keys(r).length)return out;
+  // batting patterns
+  if(low("bat_leg")&&low("bat_bf"))add({pri:1,corner:"Technical",area:"Batting",title:"Score off the back foot on the leg side",why:"Ratings: "+sc(["bat_leg","bat_bf","sh_pull","sh_hook"])+".",
+    goal:"Pull and hook the short ball with control, keeping it on the ground or over square leg",measure:"Controlled pull or hook from 4 of 6 short balls in a throwdown set",
+    acts:[["Pull shot throwdowns from side-arm, "+(jr?"soft or tennis ball first, then hard ball with full protective kit":"building to bowling machine pace"),"Coach"],["Shadow batting: back-and-across trigger and rolling the wrists, 5 minutes a day","Player"],["Decide hook or leave: short-ball decision drill","Player and coach"]]});
+  else if(low("bat_bf")&&(low("sh_pull")||low("sh_hook")))add({pri:2,corner:"Technical",area:"Batting",title:"Pull and hook",why:"Ratings: "+sc(["bat_bf","sh_pull","sh_hook"])+".",
+    goal:"Play the pull shot with a strong base and hands",measure:"4 of 6 short balls pulled along the ground",acts:[["Pull shot throwdowns","Coach"],["Shadow pull and hook, 5 minutes a day","Player"]]});
+  if(low("bat_off")&&low("bat_ff"))add({pri:1,corner:"Technical",area:"Batting",title:"Drive through the off side",why:"Ratings: "+sc(["bat_off","bat_ff","sh_cover","sh_square"])+".",
+    goal:"Drive the full ball through cover and mid-off with a still head and full face",measure:"4 of 6 full balls driven along the ground between cover and mid-off",
+    acts:[["Drop-feed and throwdown drives to a cover target","Coach"],["Front-foot stride and head-over-ball drill against a wall","Player"]]});
+  if(low("bat_off")&&low("bat_bf"))add({pri:1,corner:"Technical",area:"Batting",title:"Cut and late cut",why:"Ratings: "+sc(["bat_off","bat_bf","sh_cut","sh_late"])+".",
+    goal:"Score square and behind square on the off side to short, wide balls",measure:"Cut 4 of 6 short, wide balls in front of point",
+    acts:[["Back-and-across footwork with cut throwdowns","Coach"],["Late cut with soft hands into the gully gap","Player"]]});
+  if(low("bat_leg")&&low("bat_ff")&&!low("bat_bf"))add({pri:2,corner:"Technical",area:"Batting",title:"Leg-side scoring off the front foot",why:"Ratings: "+sc(["bat_leg","bat_ff","sh_on","sh_glance"])+".",
+    goal:"Work straight and full balls through midwicket and fine leg",measure:"Scores on the leg side from 4 of 6 balls on the stumps",acts:[["On drive and leg glance throwdowns","Coach"],["Stride to the line of the ball drill","Player"]]});
+  if(low("bat_spin")||(low("sh_sweep")&&low("bat_spin",5)))add({pri:2,corner:"Technical",area:"Batting",title:"Play spin with footwork and the sweep",why:"Ratings: "+sc(["bat_spin","sh_sweep","sh_lap","sh_slog"])+".",
+    goal:"Use the crease, move down the pitch and sweep to rotate strike against spin",measure:"Score off 4 of 6 balls from a spinner in a middle practice",
+    acts:[["Spin bowling in nets: down the pitch, back and across, sweep","Player and coach"],["Sweep on a mat: front knee to the line, bat flat","Player"]]});
+  if(low("bat_rot")||low("bat_run"))add({pri:2,corner:"Tactical",area:"Batting",title:"Rotate the strike",why:"Ratings: "+sc(["bat_rot","bat_run","sh_glance","fit_speed"])+".",
+    goal:"Turn dot balls into singles with soft hands, angles and clear calling",measure:"Dot-ball percentage below 50% in a 30-ball scenario",
+    acts:[["Singles game: score off every ball, coach sets fields","Coach"],["Calling and running drill: yes, no, wait","Player"]]});
+  if(low("bat_power")||(p.profile.fmt&&p.profile.fmt.t20&&(low("sh_slog")||low("sh_scoop")||low("sh_ramp"))))add({pri:3,corner:"Technical",area:"Batting",title:"Boundary options",why:"Ratings: "+sc(["bat_power","sh_slog","sh_scoop","sh_ramp"])+".",
+    goal:"Have two reliable boundary options for the death overs",measure:"Clears the ring with 3 of 6 balls in a range-hitting set",acts:[["Range hitting with a stable base","Player"],["Pick one boundary option and practise it every net","Player and coach"]]});
+  if(low("bat_pace"))add({pri:2,corner:"Technical",area:"Batting",title:"Play pace confidently",why:"Ratings: "+sc(["bat_pace","bat_grip"])+".",
+    goal:"Stay balanced with a simple trigger and still head against quicker bowling",measure:"Coach rates balance at contact 7/10 or more in a bowling machine session",acts:[["Bowling machine at building pace, trigger and head position","Coach"],["Watching the ball from the hand: catch-and-call drill","Player"]]});
+  // bowling patterns
+  if(bowls){
+    if(low("bowl_acc")||low("bowl_spell"))add({pri:1,corner:"Technical",area:"Bowling",title:"Line, length and consistency",why:"Ratings: "+sc(["bowl_acc","bowl_spell","fit_endur"])+".",
+      goal:"Hit a good-length target consistently over a full spell",measure:"4 of 6 balls in the target area in each over of a "+(jr?"spell within ECB limits":"6-over spell"),
+      acts:[["Target bowling: cones on a good length, score each over","Player"],["Repeatable run-up: mark it and check it each net","Player"]]});
+    if(low("bowl_seampos"))add({pri:2,corner:"Technical",area:"Bowling",title:"Seam position",why:"Ratings: "+sc(["bowl_seampos"])+".",
+      goal:fam==="seam"?"Present an upright seam at release":"Control seam angle and revolutions at release",measure:"Video shows the intended seam position on 4 of 6 balls",
+      acts:[["Seam-up flicks to a partner, 20 a day","Player"],["Slow-motion release check on video","Coach"]]});
+    if(low("bowl_pace"))add({pri:2,corner:"Technical",area:"Bowling",title:fam==="seam"?"Swing":"Drift",why:"Ratings: "+sc(["bowl_pace","bowl_seampos"])+".",
+      goal:fam==="seam"?"Swing the new ball with a repeatable wrist and seam":"Get drift with more revolutions and a higher release",measure:"Coach sees "+(fam==="seam"?"swing":"drift")+" on 3 of 6 balls",
+      acts:[[fam==="seam"?"Seam-position and wrist drills with a new ball":"Revolutions drills: spinning to a partner","Player"]]});
+    if(low("bowl_death")||low("dl_se_yorker"))add({pri:2,corner:"Technical",area:"Bowling",title:"Death bowling",why:"Ratings: "+sc(["bowl_death","dl_se_yorker","dl_se_slower"])+".",
+      goal:"Land yorkers and a slower ball under pressure",measure:"3 of 6 yorkers on target in a death-overs scenario",acts:[["Yorker target practice at the end of each net","Player"],["Death-over scenarios with set fields","Coach"]]});
+    const D=fam?DELIVERIES[fam].items:[];const stock=D[0]&&v(D[0][0]);
+    if(D.length&&stock!=null&&stock<=5)add({pri:1,corner:"Technical",area:"Bowling deliveries",title:"Master the stock ball first",why:"Stock ball rated "+stock+".",
+      goal:"Bowl the stock ball reliably before adding variations",measure:"4 of 6 stock balls in the target area",acts:[["Stock-ball-only overs in nets","Player"]]});
+    else{const lows=D.slice(1).filter(([k])=>low(k)).sort((a,b)=>v(a[0])-v(b[0]));
+      if(lows.length||low("bowl_var"))add({pri:3,corner:"Technical",area:"Bowling deliveries",title:"Add one variation: "+(lows[0]?lows[0][1]:"pick one"),why:"Ratings: "+sc(["bowl_var",...lows.slice(0,3).map(x=>x[0])])+".",
+        goal:"Bowl the "+(lows[0]?lows[0][1].toLowerCase():"chosen variation")+" with the same action as the stock ball",measure:"Lands 3 of 6 in a net without the batter reading it",acts:[["One over of the variation in every net","Player"],["Film to check the action matches the stock ball","Coach"]]})}
+  }
+  // fielding / keeping
+  if(low("fld_close")||low("fld_slip")||low("fld_high"))add({pri:2,corner:"Technical",area:"Fielding",title:"Catching",why:"Ratings: "+sc(["fld_close","fld_slip","fld_high"])+".",
+    goal:"Take catches in the positions they field in matches",measure:"8 of 10 in a pressure catching set",acts:[["Slip cradle and reaction catching, 50 a session","Player"],["High-ball calling and positioning drill","Coach"]]});
+  if(low("fld_ground")||low("fld_throw"))add({pri:3,corner:"Technical",area:"Fielding",title:"Ground fielding and throwing",why:"Ratings: "+sc(["fld_ground","fld_throw","fld_dist"])+".",
+    goal:"Attack the ball, clean pick-up and a flat throw to the keeper",measure:"8 of 10 throws over the stumps from 25 metres",acts:[["Attack-the-ball pick-up and throw drill","Player"],["Throwing technique: side-on, front arm to target","Coach"]]});
+  if(keeper&&(low("wk_up")||low("wk_upseam")||low("wk_catchup")))add({pri:1,corner:"Technical",area:"Wicket-keeping",title:"Standing up",why:"Ratings: "+sc(["wk_up","wk_upseam","wk_catchup","wk_stump"])+".",
+    goal:"Stand up to spin and medium pace, taking the ball cleanly and stumping quickly",measure:"Takes 8 of 10 cleanly standing up in a net",acts:[["Standing-up drills with a batter in front","Player and coach"],["Stumping speed drill","Player"]]});
+  if(keeper&&low("wk_feet"))add({pri:2,corner:"Physical",area:"Wicket-keeping",title:"Keeper footwork",why:"Ratings: "+sc(["wk_feet","fit_agility"])+".",goal:"Move early and stay low to take the ball inside the body",measure:"Coach rates movement 7/10 or more",acts:[["Ladder and side-step footwork with ball feeds","Player"]]});
+  // tactical
+  if(low("tac_read")||low("tac_inn"))add({pri:2,corner:"Tactical",area:"Tactical knowledge",title:"Read the game and build an innings",why:"Ratings: "+sc(["tac_read","tac_inn"])+".",
+    goal:"Explain and follow a plan for an innings based on the match situation",measure:"Talks through the plan before batting and reviews it after each match",acts:[["Scenario middle practice: target, overs and wickets set by coach","Coach"],["Post-match review: what was the plan and did it work","Player"]]});
+  if(bowls&&(low("tac_plans")||low("tac_field")))add({pri:3,corner:"Tactical",area:"Tactical knowledge",title:"Bowling plans and fields",why:"Ratings: "+sc(["tac_plans","tac_field"])+".",
+    goal:"Set a field and a plan for different batters",measure:"Sets their own field and plan in 3 matches",acts:[["Plan-the-over cards before each net spell","Player"]]});
+  // fitness
+  if(low("fit_speed")&&low("bat_run",5))add({pri:3,corner:"Physical",area:"Fitness",title:"Speed between the wickets",why:"Ratings: "+sc(["fit_speed","bat_run"])+".",goal:"Run quicker singles and twos with a good turn",measure:"Faster time for a run-three test",acts:[["Sprint starts and turning drills, twice a week","Player"]]});
+  if(low("fit_endur"))add({pri:3,corner:"Physical",area:"Fitness",title:"Endurance",why:"Ratings: "+sc(["fit_endur"])+".",goal:"Keep skill levels up through a full innings or spell",measure:"Improves a shuttle-run score",acts:[[jr?"Active play and running games, 3 times a week":"Interval running, 2 sessions a week","Player"]]});
+  if(low("fit_strength")||low("fit_power")||low("fit_core"))add({pri:3,corner:"Physical",area:"Fitness",title:jr?"Movement skills and strength":"Strength and power",why:"Ratings: "+sc(["fit_strength","fit_power","fit_core"])+".",
+    goal:jr?"Build strength with bodyweight and movement skills":"Gym programme for hitting and bowling power",measure:"Coach re-tests at the next block review",acts:[[jr?"Bodyweight circuit: squats, lunges, planks, 3 times a week":"Strength programme agreed with S&C coach","Player"]]});
+  // perception gaps
+  if(lc&&ls){const gaps=[];Object.keys(ls.ratings||{}).forEach(k=>{const a=ls.ratings[k],b=lc.ratings&&lc.ratings[k];if(typeof a==="number"&&typeof b==="number"&&Math.abs(a-b)>=3)gaps.push([k,a,b])});
+    if(gaps.length)add({pri:2,corner:"Psychological",area:"Mindset",title:"Talk through where your views differ",why:gaps.slice(0,4).map(([k,a,b])=>nm(k)+": player "+a+", coach "+b).join("; ")+".",
+      goal:"Agree a shared view of strengths and areas to develop",measure:"Player and coach ratings within 2 points at the next review",acts:[["One-to-one chat with video of these skills","Coach"]]})}
+  out.forEach((o,i)=>o.id="s"+i);
+  return out.sort((a,b)=>a.pri-b.pri);
+}
+function strengths(p){const {r}=ratingBasis(p);const areas=areasFor(p,true).map(a=>[a.name,areaAvg(r,a)]).filter(x=>x[1]!=null).sort((a,b)=>b[1]-a[1]);return areas.slice(0,2).filter(x=>x[1]>=6)}
+function panelSuggest(){const p=local,S=suggestions(p),{lc,ls}=ratingBasis(p),st=strengths(p);
+  const have=new Set(p.goals.map(g=>g.fromSuggest).filter(Boolean));
+  const basis=[lc&&("coach rating "+fmtDate(lc.date)),ls&&("self-rating "+fmtDate(ls.date))].filter(Boolean).join(" and ");
+  return `<section class="card"><div class="row"><h3>Suggested development areas</h3></div>
+   <p class="hint">${basis?"Based on the latest "+esc(basis)+(lc?" (coach scores take priority)":"")+", the bowling action check and the profile. ":"Add a rating in Skills radar to get suggestions. "}A score of 4 or below counts as low. These are starting points to agree with the player, not a plan on their own.</p>
+   ${p.profile.improve?`<div class="callout"><b>Player wants to improve:</b> ${esc(p.profile.improve)}</div>`:""}
+   ${st.length?`<div class="callout good"><b>Strengths to build on:</b> ${st.map(([n,v])=>esc(n)+" ("+v.toFixed(1)+")").join(", ")}</div>`:""}
+   ${S.length?S.slice(0,showAllSugg?99:5).map(s=>`<div class="goal"><div class="goal-h"><span class="corner">${esc(s.corner)} · ${esc(s.area)}</span>${s.pri<=1?`<span class="chip ${s.pri===0?"bad":"warn"}">${s.pri===0?"Do first":"Priority"}</span>`:""}<span class="spacer"></span>${have.has(s.title)?`<span class="chip good">Added to goals</span>`:`<button class="btn small" type="button" data-act="addSuggest" data-title="${esc(s.title)}">+ Add as goal</button>`}</div>
+     <b style="font-size:16px">${esc(s.title)}</b><span class="note">${esc(s.why)}</span><span>${esc(s.goal)}</span></div>`).join("")+(S.length>5?`<div><button class="btn small" type="button" data-act="toggleSugg">${showAllSugg?"Show fewer":"Show all "+S.length+" suggestions"}</button></div>`:""):(basis?`<div class="callout good">No clear weak spots in the latest ratings. Use the player's own goals above.</div>`:"")}
+  </section>`}
+function panelIDP(){const G=local.goals,t=today();
+  return panelSuggest()+`<section class="card"><div class="row"><h3>Development goals</h3><span class="spacer"></span><button class="btn small primary" type="button" data-act="addGoal">+ Add goal</button></div>
+   <p class="hint">Agree two to four goals with the player across the four corners (technical, tactical, physical, psychological and social). Write each as something they can see and measure, and give every action an owner and a date.</p>
+   ${G.length?"":`<div class="callout">No goals yet. Use the ratings and the player's own answers to agree the first one.</div>`}
+   ${G.map((g,gi)=>{const b="goals."+gi;const st=g.status||"Not started";const cls=st==="Achieved"?"good":st==="In progress"?"warn":"";
+     return `<div class="goal"><div class="goal-h"><span class="corner">Goal ${gi+1} · ${esc(g.corner||"")}</span>${(()=>{const n=local.sessions.map((x,i)=>(x.goals||[]).includes(g.id)?i+1:0).filter(Boolean);return n.length?`<span class="chip">Sessions ${n.join(", ")}</span>`:""})()}<span class="chip ${cls}">${esc(st)}</span>${g.target?`<span class="chip ${g.target<t&&st!=="Achieved"?"bad":""}">Target ${esc(fmtDate(g.target))}</span>`:""}<span class="spacer"></span><button class="x" type="button" data-act="delGoal" data-gi="${gi}" aria-label="Delete goal">×</button></div>
+      <div class="grid">${inp(b+".goal","Goal",{full:1,ph:"e.g. Score 25+ in three league innings by playing spin off the back foot"})}${inp(b+".corner","Corner",{select:CORNERS})}${inp(b+".area","Skill area",{select:SKILLS.map(s=>s.name).concat(["Bowling deliveries","Mindset"])})}${inp(b+".owner","Goal owner",{select:OWNERS})}${inp(b+".target","Target date",{type:"date"})}${inp(b+".status","Status",{select:STATUSES,none:"Not started"})}</div>
+      <div class="grid wide">${inp(b+".why","Why it matters to the player",{area:1})}${inp(b+".measure","How we'll know (measure of success)",{area:1})}</div>
+      <div style="display:grid;gap:6px"><div class="row"><b style="font-size:14px">Actions</b><span class="spacer"></span><button class="btn small" type="button" data-act="addAction" data-gi="${gi}">+ Action</button></div>
+      ${g.actions.length?g.actions.map((a,ai)=>{const ab=b+".actions."+ai;const od=!a.done&&a.due&&a.due<t;return `<div class="act ${a.done?"done":""} ${od?"overdue":""}"><input type="checkbox" data-k="${ab}.done" ${a.done?"checked":""} aria-label="Done"><input type="text" data-k="${ab}.text" value="${esc(a.text)}" placeholder="e.g. 3 x 20-ball spin sessions on the bowling machine" aria-label="Action"><select class="ao" data-k="${ab}.owner" aria-label="Owner"><option value="">Owner…</option>${OWNERS.map(o=>`<option ${o===a.owner?"selected":""}>${esc(o)}</option>`).join("")}</select><input class="ad" type="date" data-k="${ab}.due" value="${esc(a.due)}" aria-label="Due date"><button class="x" type="button" data-act="delAction" data-gi="${gi}" data-ai="${ai}" aria-label="Delete action">×</button></div>`}).join(""):`<span class="note">No actions yet.</span>`}</div></div>`}).join("")}
+  </section>`}
+/* ---------- training sessions ---------- */
+let curSession=null;
+const SESSION_TYPES=["Group session","One-to-one","Nets","Match practice","Fielding session","Fitness and conditioning","Video analysis"];
+const goalLabel=(g,gi)=>"Goal "+(gi+1)+(g.goal?": "+g.goal:" ("+(g.corner||"no title yet")+")");
+const PRACTICE={
+ Batting:["Drop feeds or throwdowns to one spot, same shot every ball, e.g. 6 sets of 6 drives off a full length.","Throwdowns or bowling machine with mixed lines and lengths; the batter picks the shot or leaves.","Middle practice: 30 needed off 4 overs against a set field, rotating the strike and finding gaps."],
+ Bowling:["Target bowling on a good length, same delivery every ball, from marked run-up.","Bowl to a batter mixing stock ball and variations, changing ends and angles, coach calls the next ball.","Death overs: defend 10 off the last over against a batter trying to score, with a set field."],
+ Fielding:["Feeds from one spot: the same catch or pick-up repeated, e.g. 20 slip catches.","Random feeds at different heights and angles, throwing to either end on the call.","Fielding game: batters run on every ball, fielders save runs and go for run-outs."],
+ "Wicket-keeping":["Standing up to feeds into the same channel, focusing on a clean take.","Deflections off a stump or bat so each take is unpredictable, standing up and back.","Keep to a bowler in a live net with a batter, taking stumping and catching chances."],
+ Fitness:["Timed 22-yard sprints and turns.","Reactive running and turning on the coach's call.","Running twos and threes in a batting game with fielders attacking the stumps."],
+ Tactical:["Talk through a field and plan on a diagram for one batter.","Coach changes the field or bowler mid-over and the player adapts the plan.","Player captains a game scenario, setting fields and bowling changes."]
+};
+function practiceTypes(s){const G=local.goals.filter(g=>(s.goals||[]).includes(g.id));
+  const map=a=>!a?null:a.startsWith("Batting")?"Batting":a.startsWith("Bowling")?"Bowling":a==="Fielding"?"Fielding":a==="Wicket-keeping"?"Wicket-keeping":a==="Fitness"?"Fitness":"Tactical";
+  const areas=[...new Set(G.map(g=>map(g.area)).filter(Boolean))].slice(0,2);if(!areas.length)areas.push("Batting");
+  const pick=i=>areas.map(a=>(areas.length>1?a+": ":"")+PRACTICE[a][i]).join(" ");
+  return [["fixed","Fixed","Closed, repetitive practice of one skill in a stable setting.",pick(0)],["dynamic","Dynamic","Variable practice where the feed changes and the player has to read and decide.",pick(1)],["scenario","Scenario-based","Game-like practice with a match situation, pressure and consequences.",pick(2)]]}
+function panelTraining(){const S=local.sessions,G=local.goals;
+  if(!curSession||!S.find(s=>s.id===curSession))curSession=S.length?S[S.length-1].id:null;
+  const s=S.find(x=>x.id===curSession), si=S.indexOf(s);
+  const tabs=`<div class="seg" role="tablist" aria-label="Training sessions">${S.map((x,i)=>`<button type="button" data-act="pickSession" data-sid="${esc(x.id)}" aria-pressed="${x.id===curSession}">Session ${i+1}${x.date?" · "+esc(fmtDate(x.date)):""}</button>`).join("")}${S.length<10?`<button type="button" data-act="addSession">+ Add session</button>`:""}</div>`;
+  if(!s)return `<section class="card"><h3>Training sessions</h3><p class="hint">Plan up to 10 sessions for this player. Each session links to the IDP goals by number, so you can see which goals every session works on.</p>${tabs}</section>`;
+  const b="sessions."+si;const linked=s.goals||[];
+  return `<section class="card"><div class="row"><h3>Training sessions</h3><span class="spacer"></span><span class="note">${S.length} of 10</span></div>${tabs}</section>
+  <section class="card"><div class="row"><h3>Session ${si+1}</h3><span class="spacer"></span>${confirmSession===s.id?`<span class="confirm">Delete this session? <button class="btn small danger" type="button" data-act="delSessionYes">Delete</button><button class="btn small" type="button" data-act="delSessionNo">Keep</button></span>`:`<button class="btn small danger" type="button" data-act="delSessionAsk">Delete session</button>`}</div>
+   <div class="grid">${inp(b+".date","Date",{type:"date"})}${inp(b+".time","Start time",{type:"time"})}${inp(b+".duration","Length (minutes)",{type:"number",max:480})}${inp(b+".type","Session type",{select:SESSION_TYPES})}${inp(b+".venue","Venue",{ph:"e.g. Fledbury indoor nets"})}${inp(b+".coach","Coach")}</div>
+  </section>
+  <section class="card"><h3>Areas to work on</h3><p class="hint">Tick the IDP goals this session works on. Add or change goals in the IDP goals tab.</p>
+   ${G.length?`<div style="display:grid;gap:6px">${G.map((g,gi)=>`<label class="check"><input type="checkbox" data-sgoal="${esc(g.id)}" ${linked.includes(g.id)?"checked":""}><span><b>Goal ${gi+1}</b> <span class="note">${esc(g.corner||"")} · ${esc(g.status||"Not started")}</span><br>${esc(g.goal||"No goal written yet")}</span></label>`).join("")}</div>`:`<div class="callout">No IDP goals yet. Add them in the IDP goals tab, then link them here.</div>`}
+   <div class="grid wide">${inp(b+".focus","Other focus for this session",{area:1,ph:"e.g. Back-foot drills from Goal 2, plus catching"})}</div>
+  </section>
+  <section class="card"><h3>Session plan</h3>
+   <div style="display:grid;gap:10px">${[1,2,3].map(n=>inp(b+".obj"+n,"Session objective "+n,{ph:n===1?"By the end of the session the player can…":""})).join("")}</div>
+   <h4 class="sub-h">Training types</h4>
+   ${practiceTypes(s).map(([k,label,desc,sug])=>`<div class="goal"><div class="goal-h"><span class="corner">${esc(label)}</span><span class="note">${esc(desc)}</span></div>
+     <div class="callout" style="font-size:13.5px"><b>Suggestion:</b> ${esc(sug)} <button class="btn small" type="button" data-act="useSug" data-k="${b}.${k}" data-sug="${esc(sug)}" style="margin-left:6px">Use this</button></div>
+     <label class="f" for="f-${b.replace(/\./g,"-")}-${k}">What this looks like in this session<textarea id="f-${b.replace(/\./g,"-")}-${k}" data-k="${b}.${k}">${esc(s[k]||"")}</textarea></label></div>`).join("")}
+   <div class="grid wide">${inp(b+".equipment","Equipment",{area:1,ph:"e.g. Bowling machine, cones, incrediballs, helmet"})}${inp(b+".safety","Safety and welfare notes",{area:1,ph:"e.g. Helmets for all batting, ratios for juniors"})}</div>
+  </section>
+  <section class="card"><h3>After the session</h3>
+   <div class="grid">${inp(b+".improved","Improvement made?",{select:["Yes, clear improvement","Some improvement","No change yet","Went backwards"],none:"Not reviewed yet"})}${inp(b+".reassess","Reassessment needed?",{select:["Yes","No"],none:"Not decided"})}${s.reassess==="Yes"?inp(b+".reassessArea","What to reassess",{select:areasFor(local).map(a=>a.name).concat(["Bowling action"])}):""}</div>
+   ${s.reassess==="Yes"?`<div class="callout warn">Reassessment needed${s.reassessArea?": "+esc(s.reassessArea):""}. Add a new coach rating in Skills radar${s.reassessArea==="Bowling action"?" or update the Bowling action check":""}.</div>`:""}
+   <div class="grid wide">${inp(b+".playerFeedback","Player's view of the session",{area:1})}${inp(b+".coachNotes","Coach notes and next steps",{area:1})}</div>
+  </section>`}
+let confirmSession=null;
+/* ---------- dismissals (Play-Cricket) ---------- */
+const DISMISSALS=[["bowled","Bowled"],["lbw","LBW"],["cbehind","Caught behind (keeper)"],["cslip","Caught slip or gully"],["cfield","Caught in the field"],["candb","Caught and bowled"],["stumped","Stumped"],["runout","Run out"],["hitwkt","Hit wicket"],["other","Other"]];
+const DISMISS_COLORS={bowled:"var(--s4)",lbw:"var(--s3)",cbehind:"var(--s2)",cslip:"var(--s5)",cfield:"var(--s1)",candb:"var(--ink)",stumped:"#0e7c86",runout:"var(--muted)",hitwkt:"#8a6d3b",other:"var(--line)"};
+let dmSeason=null, dmMsg="";
+function classifyOut(line){
+  const t=" "+line.toLowerCase().replace(/\s+/g," ").trim()+" ";
+  if(/not out|did not bat|\bdnb\b|retired not out/.test(t))return "notout";
+  if(/run out|\bro\b/.test(t))return "runout";
+  if(/\bst[ .]|stumped/.test(t))return "stumped";
+  if(/hit wicket|\bhw\b/.test(t))return "hitwkt";
+  if(/\blbw\b|leg before/.test(t))return "lbw";
+  if(/c ?& ?b |caught and bowled|\bc&b\b/.test(t))return "candb";
+  if(/(\bc |\bct |caught)/.test(t)){if(/†|\(wk\)|\bwk\b|keeper|caught behind/.test(t))return "cbehind";if(/\bslip|gully/.test(t))return "cslip";return "cfield"}
+  if(/\bb\b |bowled/.test(t))return "bowled";
+  if(/retired|obstruct|handled|timed out|absent/.test(t))return "other";
+  return null;
+}
+function dmTotals(seasons){const T={};DISMISSALS.forEach(([k])=>T[k]=0);seasons.forEach(s=>DISMISSALS.forEach(([k])=>T[k]+=+(s.d&&s.d[k])||0));return T}
+const DM_LINKS={
+ bowled:{skills:["bat_grip","sh_fd","bat_ff","bat_pace"],why:"Bowled usually means the ball beat the defence or the batter played across the line.",work:"Playing straight: forward defensive, head over the ball, judging line."},
+ lbw:{skills:["bat_ff","sh_fd","bat_leg","bat_spin"],why:"LBW often comes from the front pad getting across, or playing around the front leg.",work:"Front-foot stride to the line of the ball and playing straight balls straight."},
+ cbehind:{skills:["bat_off","sh_cover","sh_square","sh_cut"],why:"Caught behind usually comes from playing at balls outside off stump.",work:"Knowing where off stump is, leaving well, and soft hands in defence."},
+ cslip:{skills:["bat_off","sh_cover","sh_cut","sh_late"],why:"Caught in the cordon points to driving or cutting away from the body.",work:"Off-side shot selection: only drive when it's full, and get the feet to the ball."},
+ cfield:{skills:["tac_inn","tac_read","bat_power","sh_pull","sh_hook","sh_slog"],why:"Caught in the field is often shot selection or mistiming an attacking shot.",work:"Shot selection for the match situation, and hitting the gaps along the ground."},
+ candb:{skills:["sh_fd","bat_ff","sh_on"],why:"Caught and bowled often comes from closing the bat face early or checking a drive.",work:"Full face of the bat through the line, completing the shot."},
+ stumped:{skills:["bat_spin","sh_sweep","bat_ff"],why:"Stumped means being beaten by spin when out of the crease.",work:"Footwork to spin: going all the way to the pitch of the ball or staying back."},
+ runout:{skills:["bat_run","bat_rot","fit_speed","tac_comm"],why:"Run outs point to calling, running or backing up.",work:"Calling, running the first run hard and backing up."},
+ hitwkt:{skills:["bat_bf","sh_pull","bat_grip"],why:"Hit wicket usually comes from going too deep in the crease on the back foot.",work:"Back-foot balance and base."}
+};
+function dmInsights(p){const S=p.matchData.seasons;const T=dmTotals(S);const outs=DISMISSALS.reduce((a,[k])=>a+T[k],0);if(!outs)return{outs,items:[]};
+  const {r}=ratingBasis(p);const N=allNames(p);const items=[];
+  Object.entries(DM_LINKS).forEach(([k,L])=>{const c=T[k];if(!c)return;const pct=c/outs*100;if(pct<15&&c<3)return;
+    const rs=L.skills.filter(x=>typeof r[x]==="number"&&N[x]).map(x=>[N[x][0],r[x]]);const avg=rs.length?rs.reduce((a,b)=>a+b[1],0)/rs.length:null;
+    let verdict="";if(avg==null)verdict="No ratings yet for the related skills.";else if(avg>=7)verdict="The related skills are rated high ("+avg.toFixed(1)+"), but this keeps happening. Worth a reassessment: the rating may be generous, or it's decision-making under match pressure rather than technique.";else if(avg<=4.5)verdict="This matches the low ratings for the related skills ("+avg.toFixed(1)+"). Match data backs up the skills analysis, so make this an IDP priority.";else verdict="The related skills are rated middling ("+avg.toFixed(1)+"). Watch for this in matches and nets.";
+    items.push({k,label:DISMISSALS.find(d=>d[0]===k)[1],c,pct,why:L.why,work:L.work,rs,verdict,avg})});
+  return{outs,items:items.sort((a,b)=>b.c-a.c)}}
+function panelDismissals(){const p=local,S=p.matchData.seasons;
+  if(!dmSeason||!S.find(s=>s.id===dmSeason))dmSeason=S.length?S[S.length-1].id:null;
+  const s=S.find(x=>x.id===dmSeason),si=S.indexOf(s);const ins=dmInsights(p);
+  const chart=S.length?`<div class="dm-chart">${S.map(x=>{const tot=DISMISSALS.reduce((a,[k])=>a+(+(x.d&&x.d[k])||0),0);return `<div class="dm-row"><span>${esc(x.season||"Season")}</span><div class="dm-bar">${tot?DISMISSALS.filter(([k])=>+(x.d[k])>0).map(([k,l])=>`<span style="flex:${+x.d[k]};background:${DISMISS_COLORS[k]}" title="${esc(l)}: ${+x.d[k]}">${+x.d[k]}</span>`).join(""):`<span class="note" style="background:none;color:var(--muted)">No dismissals entered</span>`}</div><b>${tot}</b></div>`}).join("")}</div><div class="legend">${DISMISSALS.map(([k,l])=>`<span class="row" style="gap:5px"><span class="sw" style="background:${DISMISS_COLORS[k]}"></span>${esc(l)}</span>`).join("")}</div>`:"";
+  return `<section class="card"><div class="row"><h3>How they get out</h3><span class="spacer"></span><button class="btn small primary" type="button" data-act="addSeason">+ Add season</button></div>
+   <p class="hint">Bring in Play-Cricket data by season, then compare how the player gets out with their skill ratings.</p>
+   ${S.length?chart:`<div class="callout">No seasons yet. Add a season, then paste the player's dismissals from Play-Cricket or type the totals in.</div>`}
+  </section>
+  ${s?`<section class="card"><div class="row"><h3>Season</h3><div class="seg">${S.map(x=>`<button type="button" data-act="pickSeason" data-sid="${esc(x.id)}" aria-pressed="${x.id===dmSeason}">${esc(x.season||"Season")}</button>`).join("")}</div><span class="spacer"></span><button class="btn small danger" type="button" data-act="delSeason">Delete season</button></div>
+   <div class="grid">${inp("matchData.seasons."+si+".season","Season",{ph:"e.g. 2026"})}${inp("matchData.seasons."+si+".innings","Innings",{type:"number",max:200})}${inp("matchData.seasons."+si+".notOuts","Not outs",{type:"number",max:200})}${inp("matchData.seasons."+si+".runs","Runs",{type:"number",max:9999})}${inp("matchData.seasons."+si+".hs","Highest score",{ph:"e.g. 64*"})}</div>
+   <h4 class="sub-h">Import from Play-Cricket</h4>
+   <p class="note">Open the player's batting for this season on Play-Cricket (their player page or each scorecard). Copy the rows that show how they were out, such as "c Smith b Jones", "lbw b Patel", "run out", "st †Khan b Ali" or "not out", and paste them below, one innings per line. Whole copied rows are fine. Put a † or "wk" before the fielder's name for a caught behind.</p>
+   <textarea id="dmPaste" rows="5" placeholder="c †Brown b Patel   12&#10;b Jones   4&#10;lbw b Ahmed   23&#10;not out   31"></textarea>
+   <div class="row"><button class="btn small primary" type="button" data-act="dmImport">Add to ${esc(s.season||"this season")}</button>${dmMsg?`<span class="note">${esc(dmMsg)}</span>`:""}</div>
+   <h4 class="sub-h">Dismissals this season</h4>
+   <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr))">${DISMISSALS.map(([k,l])=>inp("matchData.seasons."+si+".d."+k,l,{type:"number",max:200})).join("")}</div>
+  </section>`:""}
+  ${ins.outs?`<section class="card"><h3>Dismissals against skill ratings</h3><p class="hint">All seasons: ${ins.outs} dismissals. Each common way of getting out is checked against the ratings for the skills behind it.</p>
+   ${ins.items.length?ins.items.map(x=>`<div class="goal"><div class="goal-h"><span class="corner">${esc(x.label)}</span><span class="chip ${x.avg!=null&&x.avg<=4.5?"bad":x.avg!=null&&x.avg>=7?"warn":""}">${x.c} of ${ins.outs} (${Math.round(x.pct)}%)</span><span class="spacer"></span><button class="btn small" type="button" data-act="dmGoal" data-dk="${x.k}">+ Add as goal</button></div>
+     <span class="note">${esc(x.why)}</span>
+     ${x.rs.length?`<div class="chips">${x.rs.map(([n,v])=>`<span class="chip ${v<=4?"bad":v>=7?"good":""}">${esc(n)} ${v}</span>`).join("")}</div>`:""}
+     <div><b>${esc(x.verdict)}</b></div><div class="note">Work on: ${esc(x.work)}</div></div>`).join(""):`<p class="note">No dismissal type stands out yet.</p>`}</section>`:""}`;
+}
+function panelReviews(){const R=local.reviews;
+  return `<section class="card"><h3>Next review</h3><div class="grid">${inp("nextReview","Next IDP review date",{type:"date"})}</div></section>
+  <section class="card"><div class="row"><h3>Review log</h3><span class="spacer"></span><button class="btn small primary" type="button" data-act="addReview">+ Log a review</button></div>
+   <p class="hint">Record each check-in: what's gone well, what you've adjusted in the plan, and what happens next. Newest first.</p>
+   ${R.length?"":`<div class="callout">No reviews logged yet.</div>`}
+   ${R.map((r,ri)=>({r,ri})).reverse().map(({r,ri})=>{const b="reviews."+ri;return `<div class="goal"><div class="goal-h"><span class="corner">Review ${ri+1}</span><span class="spacer"></span><button class="x" type="button" data-act="delReview" data-ri="${ri}" aria-label="Delete review">×</button></div>
+     <div class="grid">${inp(b+".date","Date",{type:"date"})}</div>
+     <div class="grid wide">${inp(b+".well","What's gone well (player's view first)",{area:1})}${inp(b+".adjust","Changes to the plan",{area:1})}${inp(b+".next","Next steps",{area:1})}</div></div>`}).join("")}
+  </section>`}
+/* ---------- events ---------- */
+document.addEventListener("click",e=>{
+  const t=e.target.closest("[data-tab],[data-act],[data-eff]");if(!t||!local)return;
+  if(t.dataset.tab){tab=t.dataset.tab;document.querySelectorAll(".tab").forEach(b=>b.setAttribute("aria-selected",b.dataset.tab===tab));renderPanel();return}
+  if(t.dataset.eff){const k=t.dataset.eff,v=+t.dataset.v;local.bowling.effective[k]=local.bowling.effective[k]===v?0:v;
+    t.parentElement.querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",+b.dataset.v===local.bowling.effective[k]));$("#effBox").innerHTML=effHTML(effAvg(local));scheduleSave();return}
+  const act=t.dataset.act,gi=+t.dataset.gi,ai=+t.dataset.ai,ri=+t.dataset.ri;
+  const L=local;
+  switch(act){
+    case"delAsk":confirmDel=true;renderPanel();return;
+    case"delNo":confirmDel=false;renderPanel();return;
+    case"delYes":{const id=cur;clearTimeout(saveState.timer);saveState.dirty=false;delete players[id];sortOrder();cur=null;local=null;confirmDel=false;renderRoster();renderMain();
+      if(db)db.collection("players").doc(id).delete().catch(()=>banner("Couldn't delete that player. Try again."));return}
+    case"addSelf":case"addCoach":{const by=act==="addSelf"?"self":"coach";const a={id:uid(),by,label:L.assessments.some(x=>x.by===by)?"Block review":"Baseline",date:today(),ratings:{}};L.assessments.push(a);editAssess=a.id;seriesOn[a.id]=true;break}
+    case"delAssessAsk":delAsk=t.dataset.aid;renderPanel();return;
+    case"delAssessNo":delAsk=null;renderPanel();return;
+    case"delAssessYes":{const id=t.dataset.aid;L.assessments=L.assessments.filter(a=>a.id!==id);delete seriesOn[id];if(editAssess===id)editAssess=null;delAsk=null;break}
+    case"useSug":{setPath(L,t.dataset.k,t.dataset.sug);break}
+    case"addSeason":{const y=String(new Date().getFullYear());const ns={id:uid(),season:L.matchData.seasons.some(x=>x.season===y)?"":y,innings:"",notOuts:"",runs:"",hs:"",d:{}};L.matchData.seasons.push(ns);dmSeason=ns.id;dmMsg="";break}
+    case"pickSeason":dmSeason=t.dataset.sid;dmMsg="";renderPanel();return;
+    case"delSeason":L.matchData.seasons=L.matchData.seasons.filter(x=>x.id!==dmSeason);dmSeason=null;dmMsg="";break;
+    case"dmImport":{const ss=L.matchData.seasons.find(x=>x.id===dmSeason);const ta=document.getElementById("dmPaste");if(!ss||!ta)return;const add={};let no=0,skip=0,inn=0;
+      ta.value.split(/\n/).map(x=>x.trim()).filter(Boolean).forEach(line=>{const c=classifyOut(line);if(c==="notout"){no++;inn++}else if(c){add[c]=(add[c]||0)+1;inn++}else skip++});
+      Object.entries(add).forEach(([k,n])=>ss.d[k]=(+ss.d[k]||0)+n);ss.notOuts=(+ss.notOuts||0)+no||ss.notOuts;ss.innings=(+ss.innings||0)+inn||ss.innings;
+      const outs=Object.values(add).reduce((a,b)=>a+b,0);dmMsg=`Added ${outs} dismissal${outs===1?"":"s"}${no?" and "+no+" not out"+(no>1?"s":""):""}${skip?". Skipped "+skip+" line"+(skip>1?"s":"")+" that didn't show how they were out":""}.`;break}
+    case"dmGoal":{const k=t.dataset.dk,Lk=DM_LINKS[k],lab=DISMISSALS.find(d=>d[0]===k)[1];L.goals.push({id:uid(),fromSuggest:"dm-"+k,goal:"Reduce dismissals by "+lab.toLowerCase()+": "+Lk.work,corner:"Technical",area:"Batting",owner:"Player and coach",target:"",status:"Not started",why:"Play-Cricket: out "+lab.toLowerCase()+" often",measure:"Fewer "+lab.toLowerCase()+" dismissals next season, tracked from Play-Cricket",actions:[{id:uid(),text:Lk.work,owner:"Player",due:"",done:false}]});tab="idp";renderMain();scheduleSave();return}
+    case"pickSession":curSession=t.dataset.sid;confirmSession=null;renderPanel();return;
+    case"addSession":{if(L.sessions.length>=10)return;const ns={id:uid(),date:today(),type:"One-to-one",goals:[]};L.sessions.push(ns);curSession=ns.id;break}
+    case"delSessionAsk":confirmSession=curSession;renderPanel();return;
+    case"delSessionNo":confirmSession=null;renderPanel();return;
+    case"delSessionYes":L.sessions=L.sessions.filter(x=>x.id!==curSession);curSession=null;confirmSession=null;break;
+    case"delAssess":L.assessments=L.assessments.filter(a=>a.id!==editAssess);delete seriesOn[editAssess];editAssess=null;break;
+    case"clearRate":{const a=L.assessments.find(x=>x.id===editAssess);if(a)a.ratings={};break}
+    case"toggleSugg":showAllSugg=!showAllSugg;renderPanel();return;
+    case"addSuggest":{const sg=suggestions(L).find(x=>x.title===t.dataset.title);if(!sg)return;L.goals.push({id:uid(),fromSuggest:sg.title,goal:sg.goal,corner:sg.corner,area:sg.area,owner:"Player and coach",target:"",status:"Not started",why:"",measure:sg.measure,actions:sg.acts.map(([text,owner])=>({id:uid(),text,owner,due:"",done:false}))});break}
+    case"addGoal":L.goals.push({id:uid(),goal:"",corner:"Technical",area:"",owner:"Player and coach",target:"",status:"Not started",why:"",measure:"",actions:[]});break;
+    case"delGoal":L.goals.splice(gi,1);break;
+    case"addAction":L.goals[gi].actions.push({id:uid(),text:"",owner:"Player",due:"",done:false});break;
+    case"delAction":L.goals[gi].actions.splice(ai,1);break;
+    case"addReview":L.reviews.push({id:uid(),date:today(),well:"",adjust:"",next:""});break;
+    case"delReview":L.reviews.splice(ri,1);break;
+    default:return;
+  }
+  scheduleSave();renderMain();
+});
+function onField(e){const el=e.target;if(!local)return;
+  if(el.id==="radarMode"){radarMode=el.value;drawRadar();return}
+  if(el.id==="pickAssess"){editAssess=el.value;renderPanel();return}
+  if(el.dataset.sgoal){const ss=local.sessions.find(x=>x.id===curSession);if(!ss)return;ss.goals=(ss.goals||[]).filter(x=>x!==el.dataset.sgoal);if(el.checked)ss.goals.push(el.dataset.sgoal);scheduleSave();if(e.type==="change")renderPanel();return}
+  if(el.dataset.series){seriesOn[el.dataset.series]=el.checked;drawRadar();return}
+  if(el.dataset.rate){const a=local.assessments.find(x=>x.id===editAssess);if(!a)return;const v=+el.value;a.ratings[el.dataset.rate]=v;
+    const o=document.getElementById("o-"+el.dataset.rate);o.textContent=v;o.parentElement.classList.remove("na");drawRadar();scheduleSave();return}
+  const k=el.dataset.k;if(!k)return;
+  let v=el.type==="checkbox"?el.checked:el.value;
+  if(el.type==="number"&&v!=="")v=Math.max(0,parseFloat(v));
+  setPath(local,k,v);scheduleSave();
+  // live derived bits
+  if(k==="name"||k==="squad"||k==="ageGroup"){$("#hName").textContent=local.name||"Unnamed player";$("#hSub").textContent=local.squad+" · "+local.ageGroup+(local.example?" · Example player, delete when ready":"")}
+  if(e.type==="change"&&(k==="ageGroup"||k==="profile.bowlType"||k==="profile.bowlArm"||k==="profile.keeper"||k==="profile.role"||k.startsWith("consent.given")||/\.(label|date|by)$/.test(k)&&k.startsWith("assessments")||/^goals\.\d+\.(status|target|corner)$/.test(k)||/^sessions\.\d+\.(date|reassess|reassessArea)$/.test(k)||/^matchData\.seasons\.\d+\.(season|d\.)/.test(k)||/actions\.\d+\.(done|due)$/.test(k))){renderPanel();return}
+  if(k.startsWith("bowling.")){const vb=$("#verdictBox");if(vb)vb.innerHTML=verdictHTML(safety(local))}
+}
+document.addEventListener("input",onField);
+document.addEventListener("change",e=>{if(e.target.type==="checkbox"||e.target.tagName==="SELECT"||e.target.type==="date")onField(e)});
+window.addEventListener("beforeunload",()=>{if(saveState.dirty)flush()});
+/* ---------- practice copy when saving is unavailable ---------- */
+function demoPlayer(){const p=norm({name:"Example: Sam T",squad:"Juniors",ageGroup:"U15",example:true,
+  consent:{guardianName:"Parent T",given:true,date:today(),photoVideo:true},
+  profile:{role:"Bowling all-rounder",bowlArm:"Right-arm",bowlType:"Seam (fast-medium)",batHand:"Right-handed",seasons:4,otherSports:"Football, athletics (javelin)",ambitionSeason:"Open the bowling for the U15s",improve:"Bowling yorkers"},
+  assessments:[{id:"a1",by:"self",label:"Baseline",date:today(),ratings:{bat_grip:6,bat_ff:6,bat_bf:4,bat_pace:5,bat_short:4,bat_spin:3,sh_fd:6,sh_cover:7,sh_square:5,sh_on:5,sh_cut:4,sh_pull:5,sh_glance:6,sh_sweep:3,bat_run:7,bat_rot:5,bat_power:5,bowl_acc:5,bowl_pace:7,bowl_var:3,bowl_new:5,bowl_death:3,bowl_spell:5,fld_close:5,fld_high:6,fld_ground:7,fld_throw:6,fld_dist:8,fld_antic:6,tac_read:4,tac_inn:4,tac_field:3,tac_plans:3,tac_laws:5,tac_comm:5}},
+   {id:"a2",by:"coach",label:"Baseline",date:today(),ratings:{bat_grip:5,bat_ff:6,bat_bf:3,bat_pace:4,bat_short:3,bat_spin:4,sh_fd:5,sh_cover:6,sh_square:5,sh_on:4,sh_cut:3,sh_pull:4,sh_glance:6,sh_sweep:3,bat_run:6,bat_rot:4,bat_power:6,bowl_acc:4,bowl_pace:7,bowl_var:2,bowl_new:4,bowl_death:3,bowl_spell:4,fld_close:5,fld_high:5,fld_ground:6,fld_throw:6,fld_dist:8,fld_antic:5,tac_read:3,tac_inn:3,tac_field:3,tac_plans:2,tac_laws:4,tac_comm:6}}],
+  bowling:{actionType:"Semi-open",counterRot:22,pain:"No pain reported",checks:{align:"ok",flex:"concern",frontleg:"ok",follow:"ok",arm:"ok",runup:"ok"},spell:5,day:10,daysWeek:3,effective:{rhythm:3,gather:3,bound:2,frontarm:3,release:4,wrist:3,follow:4,acc:3,pace:4,vary:2}},
+  goals:[{id:"g1",goal:"Bowl 4 out of 6 yorkers on target in the final 2 overs of a net session",corner:"Technical",area:"Bowling",owner:"Player and coach",status:"In progress",target:"",why:"Wants to bowl at the death for the U15s",measure:"Target cone hit rate logged each Tuesday net",actions:[{id:"x1",text:"Yorker target practice: 3 sets of 6 every net",owner:"Player",due:"",done:false},{id:"x2",text:"Film side-on action at next net",owner:"Coach",due:"",done:false}]}]});return p}
+/* ---------- player mode (hand the phone to the player) ---------- */
+let pmStep=0, pmAssess=null, pmExitAsk=false;
+function pmSteps(){const p=local,st=["about"];if(isJunior(p))st.push("consent");st.push("health","cricket","wants");areasFor(p).forEach(a=>st.push("rate:"+a.key));st.push("done");return st}
+function enterPlayerMode(){if(!local)return;tab="overview";renderMain();pmStep=0;pmAssess=null;pmExitAsk=false;document.getElementById("pm").hidden=false;document.body.classList.add("pm-on");renderPM();}
+function exitPlayerMode(){document.getElementById("pm").hidden=true;document.body.classList.remove("pm-on");if(pmAssess){const a=local.assessments.find(x=>x.id===pmAssess);if(a&&!Object.keys(a.ratings).length){local.assessments=local.assessments.filter(x=>x.id!==pmAssess);scheduleSave()}}pmAssess=null;editAssess=null;seriesOn={};renderMain()}
+function ensurePMAssess(){if(pmAssess&&local.assessments.find(a=>a.id===pmAssess))return;const a={id:uid(),by:"self",label:local.assessments.some(x=>x.by==="self")?"Block review":"Baseline",date:today(),ratings:{}};local.assessments.push(a);pmAssess=a.id;editAssess=a.id;scheduleSave()}
+function renderPM(){const el=document.getElementById("pmBody");const st=pmSteps();if(pmStep>=st.length)pmStep=st.length-1;const s=st[pmStep],p=local;
+  const first=(p.name||"").split(" ")[0];let h="";
+  if(s==="about")h=`<h2>Hello${first?" "+esc(first):""}!</h2><p class="pm-lead">This helps your coach plan your cricket around you. There are no wrong answers.</p><div class="pm-q">${inp("name","Your name",{ph:"First name and first letter of your surname"})}${inp("squad","Which squad do you play in?",{select:SQUADS})}${inp("ageGroup","Your age group",{select:AGE_GROUPS})}</div>`;
+  else if(s==="consent")h=`<h2>For your parent or guardian</h2><p class="pm-lead">Please hand the phone to your parent or guardian for this part.</p><div class="pm-q">${inp("consent.guardianName","Parent or guardian name")}${chk("consent.given","I agree to my child having a development plan, skills assessments and coaching records kept by their Fledbury CC coach")}${chk("consent.photoVideo","I agree to photos and video for coaching use only")}${chk("consent.medicalShare","I'm happy for medical information below to be shared with the coach")}</div>`;
+  else if(s==="health")h=`<h2>Health and other sports</h2><div class="pm-q">${inp("profile.injuries","Any injuries now, or in the last two years? Is anything still sore?",{area:1})}${inp("profile.medical","Any medical conditions your coach should know about? Only share what you're happy to.",{area:1,ph:"e.g. asthma, allergies"})}${inp("profile.otherSports","What other sports do you play or have you played?",{area:1})}</div>`;
+  else if(s==="cricket")h=`<h2>Your cricket</h2><div class="pm-q">${inp("profile.batHand","How do you bat?",{select:["Right-handed","Left-handed"]})}${inp("profile.batPosition","Where do you like to bat?",{select:["Opener","Top order (3-4)","Middle order (5-6)","Lower order (7+)","No preference"]})}${inp("profile.bowlArm","Which arm do you bowl with?",{select:["Right-arm","Left-arm","Doesn't bowl"]})}${p.profile.bowlArm==="Doesn't bowl"?"":inp("profile.bowlType","What type of bowler are you?",{select:BOWL_TYPES})}${inp("profile.keeper","Do you keep wicket?",{select:["Yes","No"]})}${inp("profile.role","What's your main role?",{select:["Batter","Bowler","Batting all-rounder","Bowling all-rounder","Wicket-keeper batter"]})}${inp("profile.seasons","How many seasons have you played?",{type:"number",max:60})}${inp("profile.clubs","Clubs, schools or squads you've played for")}${inp("profile.highestLevel","Highest level you've played")}
+    <div class="f">Which formats have you played?<div class="pm-checks">${[["hard","Hardball"],["soft","Softball"],["t20","T20"],["sat","Saturday League"],["sun","Sunday"],["twoday","2-day"],["county","County age group"]].map(([k,l])=>chk("profile.fmt."+k,l)).join("")}</div></div></div>`;
+  else if(s==="wants")h=`<h2>What you want from cricket</h2><div class="pm-q">${inp("profile.ambitionSeason","What do you want to achieve this season?",{area:1})}${inp("profile.ambitionLong","Where would you like your cricket to be in two or three years?",{area:1})}${inp("profile.enjoy","What do you enjoy most when you play?",{area:1})}${inp("profile.improve","What's the one thing you most want to get better at?",{area:1})}${inp("profile.learn","How do you learn best?",{area:1,ph:"Watching, being told, trying it, video…"})}</div>`;
+  else if(s.startsWith("rate:")){ensurePMAssess();const a=local.assessments.find(x=>x.id===pmAssess);const area=areasFor(p).find(x=>x.key===s.slice(5));
+    h=`<h2>Rate yourself: ${esc(area.name)}</h2><p class="pm-lead">0 means you find it very hard and 10 means it's a real strength. Be honest. Skip anything you haven't tried.</p>
+     <div class="pm-rates">${area.items.map(([k,l])=>`<div class="pm-rate"><div class="pm-rl">${esc(l)}</div><div class="pm-scale" role="group" aria-label="${esc(l)}">${[0,1,2,3,4,5,6,7,8,9,10].map(n=>`<button type="button" data-prate="${k}" data-v="${n}" aria-pressed="${a.ratings[k]===n}">${n}</button>`).join("")}</div></div>`).join("")}</div>`}
+  else h=`<h2>All done, thank you!</h2><p class="pm-lead">Please hand the phone back to your coach.</p><button class="btn primary pm-big" type="button" data-pm="finish">Back to coach view</button>`;
+  const rateSteps=st.filter(x=>x.startsWith("rate:")).length;
+  el.innerHTML=`<div class="pm-prog"><div style="width:${Math.round(pmStep/(st.length-1)*100)}%"></div></div><div class="pm-stepn">Step ${Math.min(pmStep+1,st.length-1)} of ${st.length-1}</div>${h}
+   ${s!=="done"?`<div class="pm-nav">${pmStep>0?`<button class="btn" type="button" data-pm="back">Back</button>`:"<span></span>"}<button class="btn primary pm-big" type="button" data-pm="next">${st[pmStep+1]==="done"?"Finish":"Next"}</button></div>`:""}`;
+  document.getElementById("pmExit").innerHTML=pmExitAsk?`<button class="btn small danger" type="button" data-pm="exitYes">Coach: tap to exit</button><button class="btn small" type="button" data-pm="exitNo">Cancel</button>`:`<button class="btn small" type="button" data-pm="exitAsk">Coach exit</button>`;
+  document.getElementById("pm").scrollTop=0;
+}
+document.addEventListener("click",e=>{const b=e.target.closest("[data-pm],[data-prate],[data-act=handToPlayer]");if(!b)return;
+  if(b.dataset.act==="handToPlayer"){enterPlayerMode();return}
+  if(b.dataset.prate){const a=local.assessments.find(x=>x.id===pmAssess);if(!a)return;const k=b.dataset.prate,v=+b.dataset.v;if(a.ratings[k]===v)delete a.ratings[k];else a.ratings[k]=v;b.parentElement.querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed",+x.dataset.v===a.ratings[k]));scheduleSave();return}
+  const a=b.dataset.pm;
+  if(a==="next"){pmStep++;renderPM()}else if(a==="back"){pmStep=Math.max(0,pmStep-1);renderPM()}
+  else if(a==="exitAsk"){pmExitAsk=true;renderPM()}else if(a==="exitNo"){pmExitAsk=false;renderPM()}
+  else if(a==="exitYes"||a==="finish")exitPlayerMode();
+});
+document.getElementById("newHand").addEventListener("click",()=>{document.getElementById("addPlayer").click();setTimeout(enterPlayerMode,50)});
+/* ---------- web app extras: questionnaire links and imported answers ---------- */
+let pending=[], inviteOpen=false;
+const inviteURL=code=>location.origin+location.pathname.replace(/[^/]*$/,"")+"q.html#c="+code;
+function newCode(){const a="abcdefghjkmnpqrstuvwxyz23456789";let s="";const r=crypto.getRandomValues(new Uint8Array(12));r.forEach(n=>s+=a[n%a.length]);return s}
+async function refreshPending(){try{pending=await window.coachBackend.fetchResponses()}catch(e){pending=[]}renderRoster();if(local)addAppBits()}
+const pendingFor=p=>p&&p.inviteCode?pending.filter(r=>r.invite_code===p.inviteCode):[];
+function addAppBits(){const m=$("#main");if(!m||!local)return;const head=m.querySelector(".phead .row");
+  if(head&&!head.querySelector("[data-act=inviteToggle]")){const b=document.createElement("button");b.className="btn";b.type="button";b.dataset.act="inviteToggle";b.textContent="Questionnaire link";head.insertBefore(b,head.firstChild)}
+  m.querySelectorAll(".app-box").forEach(x=>x.remove());
+  const box=document.createElement("div");box.className="app-box";let h="";
+  pendingFor(local).forEach(r=>{const n=(r.data&&r.data.name)||"The player";h+=`<section class="card" style="border-color:var(--accent)"><div class="row"><b>New questionnaire answers from ${esc(n)}</b><span class="note">Sent ${esc(new Date(r.submitted_at).toLocaleString("en-GB",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}))}</span><span class="spacer"></span><button class="btn small primary" type="button" data-act="importResp" data-rid="${esc(r.id)}">Add to this file</button><button class="btn small" type="button" data-act="dropResp" data-rid="${esc(r.id)}">Discard</button></div><p class="note" style="margin:0">Adding fills in any profile answers they gave and saves their ratings as a new self-assessment. Your coach notes, goals and sessions aren't changed.</p></section>`});
+  if(inviteOpen){h+=local.inviteCode?`<section class="card"><h3>Player questionnaire link</h3><p class="hint">Send this link to ${esc(local.name||"the player")}${isJunior(local)?"'s parent or guardian":""}. It only shows the questionnaire: no other players and none of your notes. Their answers come back here for you to add.</p><div class="row"><input type="text" readonly id="inviteUrl" value="${esc(inviteURL(local.inviteCode))}" style="flex:1;min-width:0"><button class="btn small" type="button" data-act="copyInvite">Copy</button><a class="btn small" href="https://wa.me/?text=${encodeURIComponent("Please fill in your Fledbury CC player questionnaire: "+inviteURL(local.inviteCode))}" target="_blank" rel="noopener">WhatsApp</a></div><div class="row"><span class="note">Anyone with this link can send answers for this player.</span><span class="spacer"></span><button class="btn small danger" type="button" data-act="resetInvite">Replace link</button></div></section>`:`<section class="card"><h3>Player questionnaire link</h3><p class="hint">Create a private link for ${esc(local.name||"this player")} to fill in the questionnaire on their own phone.</p><div><button class="btn small primary" type="button" data-act="makeInvite">Create link</button></div></section>`}
+  box.innerHTML=h;const ph=m.querySelector(".phead");if(ph&&h)ph.after(box)}
+const _renderMain=renderMain;renderMain=function(){_renderMain();addAppBits()};
+const _renderRoster=renderRoster;renderRoster=function(){_renderRoster();document.querySelectorAll(".pl").forEach(b=>{const p=players[b.dataset.id];if(pendingFor(p).length){let c=b.querySelector(".chips");if(!c){c=document.createElement("span");c.className="chips";b.appendChild(c)}const s=document.createElement("span");s.className="chip good";s.textContent="New answers";c.prepend(s)}})};
+function mergeResponse(r){const d=r.data||{};const L=local;
+  ["name","squad","ageGroup"].forEach(k=>{if(d[k])L[k]=d[k]});
+  if(d.profile)Object.entries(d.profile).forEach(([k,v])=>{if(k==="fmt"&&v&&typeof v==="object")L.profile.fmt=Object.assign({},L.profile.fmt,v);else if(v!==""&&v!=null)L.profile[k]=v});
+  if(d.consent)Object.entries(d.consent).forEach(([k,v])=>{if(v!==""&&v!=null)L.consent[k]=v});
+  if(d.consent&&d.consent.given&&!L.consent.date)L.consent.date=(r.submitted_at||"").slice(0,10);
+  const rt=d.ratings||{};if(Object.keys(rt).length)L.assessments.push({id:uid(),by:"self",label:L.assessments.some(x=>x.by==="self")?"Block review":"Baseline",date:(r.submitted_at||today()).slice(0,10),ratings:rt,source:"Questionnaire link"});
+}
+document.addEventListener("click",async e=>{const t=e.target.closest("[data-act]");if(!t||!local)return;const a=t.dataset.act;
+  if(a==="inviteToggle"){inviteOpen=!inviteOpen;addAppBits()}
+  else if(a==="makeInvite"||a==="resetInvite"){local.inviteCode=newCode();scheduleSave();inviteOpen=true;addAppBits()}
+  else if(a==="copyInvite"){const i=document.getElementById("inviteUrl");try{await navigator.clipboard.writeText(i.value);t.textContent="Copied"}catch(_){i.select()}}
+  else if(a==="importResp"){const r=pending.find(x=>x.id===t.dataset.rid);if(!r)return;mergeResponse(r);scheduleSave();try{await window.coachBackend.markImported(r.id)}catch(_){}pending=pending.filter(x=>x.id!==r.id);seriesOn={};renderRoster();renderMain()}
+  else if(a==="dropResp"){if(t.dataset.sure!=="1"){t.dataset.sure="1";t.textContent="Tap again to discard";return}try{await window.coachBackend.deleteResponse(t.dataset.rid)}catch(_){}pending=pending.filter(x=>x.id!==t.dataset.rid);renderRoster();addAppBits()}
+});
+const _open=open;open=function(id){inviteOpen=false;_open(id)};
+window.addEventListener("focus",refreshPending);setInterval(()=>{if(document.visibilityState==="visible")refreshPending()},120000);
+document.getElementById("signOut").addEventListener("click",()=>window.coachBackend.signOut());
+window.addEventListener("load",init);
+})();
+</script>
+</body>
+</html>
