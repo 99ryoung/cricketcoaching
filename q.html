@@ -71,7 +71,7 @@ function inp(path,label,o={}){const v=get(ans,path)??"",id="f-"+path.replace(/\.
 function chk(path,label){const id="f-"+path.replace(/\./g,"-");return `<label class="check" for="${id}"><input type="checkbox" id="${id}" data-k="${path}" ${get(ans,path)?"checked":""}><span>${esc(label)}</span></label>`}
 function steps(){const p=asP(),st=["about"];if(isJunior(p))st.push("consent");st.push("health","cricket","wants");areasFor(p).forEach(a=>st.push("rate:"+a.key));st.push("send");return st}
 function render(){
-  if(!invite){app.innerHTML=`<h2>This link isn't working</h2><p class="lead">Ask your coach to send you a new questionnaire link.</p>`;return}
+  if(!invite){app.innerHTML=`<h2>This link isn't working</h2><p class="lead">Ask your coach to send you a new questionnaire link.</p>${window.__why?`<p class="note" style="font-size:12px;opacity:.7">${String(window.__why).replace(/[<>&]/g,"")}</p>`:""}`;return}
   if(step==="sent"){app.innerHTML=`<h2>Thank you${ans.name?", "+esc(ans.name.split(" ")[0]):""}!</h2><p class="lead">Your answers have gone to your coach. You can close this page.</p>`;return}
   const st=steps();if(step>=st.length)step=st.length-1;const s=st[step],p=asP();let h="";
   if(s==="about")h=`<h2>Hello${invite.first?" "+esc(invite.first):""}!</h2><p class="lead">This helps your coach plan your cricket around you. There are no wrong answers. It takes about 10 minutes.</p><div class="q">${inp("name","Your name",{ph:"First name and first letter of your surname"})}${inp("squad","Which squad do you play in?",{select:SQUADS})}${inp("ageGroup","Your age group",{select:AGE_GROUPS})}</div>`;
@@ -102,7 +102,7 @@ app.addEventListener("click",async e=>{const r=e.target.closest("[data-r]");if(r
     try{localStorage.removeItem(KEY)}catch(_){}step="sent"}
   saveDraft();render()});
 (async()=>{if(!sb||code.length<10){render();return}
-  const {data,error}=await sb.rpc("get_invite",{code});invite=error?null:data;
+  const {data,error}=await sb.rpc("get_invite",{code});invite=error?null:data;if(error)console.warn("get_invite",error);if(error||!data){window.__why=error?("Technical detail: "+(error.message||error.code)):"Technical detail: link code not found ("+code.slice(0,4)+"…)";}
   if(invite){if(!ans.squad&&invite.squad)ans.squad=invite.squad;if(!ans.ageGroup&&invite.ageGroup)ans.ageGroup=invite.ageGroup}
   render()})();
 })();
