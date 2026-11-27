@@ -41,15 +41,15 @@ textarea{min-height:80px;resize:vertical}
 .alert{background:var(--warn-soft);border-radius:6px;padding:10px 12px}
 .note{font-size:13.5px;color:var(--muted)}
 
-:root{--s1:#1f7a3f;--s2:#1d4f91;--s3:#c77700;--s4:#a4161a}
-@media (prefers-color-scheme: dark){:root{--s1:#6fd193;--s2:#7fa8ec;--s3:#f0b35a;--s4:#f07a7d}}
+:root{--s1:#1f7a3f;--s2:#1d4f91;--s3:#c77700;--s4:#a4161a;--s5:#6b3fa0;--s6:#0f7c80;--s7:#8a5a00;--s8:#b03a78}
+@media (prefers-color-scheme: dark){:root{--s1:#6fd193;--s2:#7fa8ec;--s3:#f0b35a;--s4:#f07a7d;--s5:#c49bf0;--s6:#5fd0d4;--s7:#e0b860;--s8:#f08cc0}}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;display:grid;gap:10px}
 h3{font-family:var(--display);font-size:22px;margin:0;font-weight:700}
 .tabs{display:flex;flex-wrap:wrap;gap:6px}
 .tabs button{border:1px solid var(--line);background:var(--bg);border-radius:999px;padding:6px 12px;font-weight:600;font-size:14px;cursor:pointer}
 .tabs button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
 .legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:14px}
-.legend span{display:inline-flex;align-items:center;gap:6px}.legend i{width:12px;height:12px;border-radius:3px;display:inline-block}
+.legend{gap:8px}.lg{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--bg);border-radius:999px;padding:7px 12px;font-size:14px;cursor:pointer;text-align:left}.lg[aria-pressed="false"]{opacity:.6}.lg i{width:14px;height:14px;border-radius:4px;display:inline-block;flex:none;box-sizing:border-box}.lg:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 svg{width:100%;height:auto;display:block}
 table{width:100%;border-collapse:collapse;font-size:14px}th,td{text-align:left;padding:6px 4px;border-bottom:1px solid var(--line)}td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
 .pill{display:inline-block;font-size:12px;font-weight:700;padding:2px 8px;border-radius:999px;background:var(--surface-2);color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
@@ -78,7 +78,7 @@ const sb=cfg.supabaseUrl&&!/YOUR-PROJECT/.test(cfg.supabaseUrl)?window.supabase.
 const app=document.getElementById("app");
 const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const fmt=d=>{if(!d)return"";const x=new Date(d+"T12:00:00");return isNaN(x)?d:x.toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"})};
-const COLORS=["var(--s1)","var(--s2)","var(--s3)","var(--s4)"];
+const COLORS=["var(--s1)","var(--s2)","var(--s3)","var(--s4)","var(--s5)","var(--s6)","var(--s7)","var(--s8)"];let on=null;
 let R=null,mode="overview",editing=false,draft=null,saving=false,msg="";
 const PROFILE_Q=[["batHand","How do you bat?",{select:["Right-handed","Left-handed"]}],["batPosition","Where do you like to bat?",{select:["Opener","Top order (3-4)","Middle order (5-6)","Lower order (7+)","No preference"]}],["bowlArm","Which arm do you bowl with?",{select:["Right-arm","Left-arm","Doesn't bowl"]}],["bowlType","What type of bowler are you?",{select:BOWL_TYPES}],["keeper","Do you keep wicket?",{select:["Yes","No"]}],["role","What's your main role?",{select:["Batter","Bowler","Batting all-rounder","Bowling all-rounder","Wicket-keeper batter"]}],["seasons","How many seasons have you played?",{type:"number"}],["clubs","Clubs, schools or squads you've played for",{}],["highestLevel","Highest level you've played",{}],["otherSports","Other sports you play",{area:1}],["ambitionSeason","What do you want to achieve this season?",{area:1}],["ambitionLong","Where would you like your cricket to be in two or three years?",{area:1}],["enjoy","What do you enjoy most when you play?",{area:1}],["improve","What's the one thing you most want to get better at?",{area:1}],["learn","How do you learn best?",{area:1}]];
 const FMTS=[["hard","Hardball"],["soft","Softball"],["t20","T20"],["sat","Saturday League"],["sun","Sunday"],["twoday","2-day"],["county","County age group"]];
@@ -106,8 +106,9 @@ function sessionsCard(){const S=(R.sessions||[]).slice().sort((a,b)=>(a.date||"9
    ${past.map(x=>`<details class="sess"><summary>${head(x)} (done)</summary><div style="display:grid;gap:6px;margin-top:6px">${sub(x)?`<div class="note">${sub(x)}</div>`:""}${body(x)}</div></details>`).join("")}</section>`}
 function wrap(t,max){const w=String(t).split(" ");const out=[];let line="";w.forEach(x=>{if((line+" "+x).trim().length>max&&line){out.push(line);line=x}else line=(line+" "+x).trim()});if(line)out.push(line);return out}
 function chart(){let axes,series;
-  if(mode==="overview"){axes=R.axes;series=R.series.map((s,i)=>({name:s.name,color:COLORS[i%4],vals:s.ov}))}
-  else{const a=R.areas.find(x=>x.key===mode);axes=a.items;series=R.series.map((s,i)=>({name:s.name,color:COLORS[i%4],vals:(s.det&&s.det[mode])||[]})).filter(s=>s.vals.some(v=>v!=null))}
+  const all=R.series.map((s,i)=>Object.assign({},s,{i,color:COLORS[i%8]}));const vis=all.filter(s=>on.has(s.i));
+  if(mode==="overview"){axes=R.axes;series=vis.map(s=>({name:s.name,color:s.color,vals:s.ov}))}
+  else{const a=R.areas.find(x=>x.key===mode);axes=a.items;series=vis.map(s=>({name:s.name,color:s.color,vals:(s.det&&s.det[mode])||[]})).filter(s=>s.vals.some(v=>v!=null))}
   const ov=mode==="overview",fs=ov?28:22,lh=fs*1.1,W=640,Rr=ov?150:135,cx=W/2,cy=Rr+(ov?95:110),H=cy*2,n=axes.length;
   const pt=(i,v)=>{const a=-Math.PI/2+i*2*Math.PI/n;return[cx+Math.cos(a)*Rr*v/10,cy+Math.sin(a)*Rr*v/10]};
   let g="";
@@ -116,9 +117,9 @@ function chart(){let axes,series;
     g+=`<text x="${lx}" y="${ly-(w.length-1)*lh/2+fs*.35}" text-anchor="${an}" font-size="${fs}" font-weight="600" fill="var(--fg)">${w.map((t,j)=>`<tspan x="${lx}" dy="${j?lh:0}">${esc(t)}</tspan>`).join("")}</text>`});
   series.forEach(s=>{const p=s.vals.map((v,i)=>pt(i,v??0));g+=`<polygon points="${p.map(q=>q.join(",")).join(" ")}" fill="${s.color}" fill-opacity=".14" stroke="${s.color}" stroke-width="2.5" stroke-linejoin="round"/>`;p.forEach((q,i)=>{if(s.vals[i]!=null)g+=`<circle cx="${q[0]}" cy="${q[1]}" r="3.5" fill="${s.color}"/>`})});
   const svg=`<svg viewBox="-70 0 780 ${H}" role="img" aria-label="Spider chart of your ratings out of 10">${g}</svg>`;
-  const leg=`<div class="legend">${series.map(s=>`<span><i style="background:${s.color}"></i>${esc(s.name)}</span>`).join("")}</div>`;
-  const tbl=series.length?`<table><thead><tr><th>Skill</th>${series.map(s=>`<th class="n" style="color:${s.color}">${esc(s.name.split(" · ")[0])}</th>`).join("")}</tr></thead><tbody>${axes.map((a,i)=>`<tr><td>${esc(a)}</td>${series.map(s=>`<td class="n">${s.vals[i]==null?"–":(+s.vals[i]).toFixed(mode==="overview"?1:0)}</td>`).join("")}</tr>`).join("")}</tbody></table>`:"";
-  return svg+leg+tbl}
+  const leg=`<div><div class="note" style="margin-bottom:6px">Tap an assessment to show or hide it on the chart.</div><div class="legend">${all.map(s=>`<button type="button" class="lg" data-s="${s.i}" aria-pressed="${on.has(s.i)}"><i style="background:${on.has(s.i)?s.color:"transparent"};border:2px solid ${s.color}"></i>${esc(s.name)}</button>`).join("")}</div></div>`;
+  const tbl=!series.length?`<p class="note" style="text-align:center;margin:0">Tick an assessment above to draw it.</p>`:`<table><thead><tr><th>Skill</th>${series.map(s=>`<th class="n" style="color:${s.color}">${esc(s.name.split(" · ")[0])}</th>`).join("")}</tr></thead><tbody>${axes.map((a,i)=>`<tr><td>${esc(a)}</td>${series.map(s=>`<td class="n">${s.vals[i]==null?"–":(+s.vals[i]).toFixed(mode==="overview"?1:0)}</td>`).join("")}</tr>`).join("")}</tbody></table>`;
+  return leg+svg+tbl}
 function render(){
   if(!R){app.innerHTML=`<h2>This link isn't working</h2><p class="lead">Ask your coach to send you a new link.</p>`;return}
   const tabs=[["overview","Overview"],...R.areas.map(a=>[a.key,a.name])];
@@ -133,6 +134,7 @@ function render(){
   h+=`<p class="note">This page is just for you. Please don't share the link. Talk to your coach if anything here doesn't look right.</p>`;
   app.innerHTML=h}
 app.addEventListener("click",async e=>{const b=e.target.closest("[data-m]");if(b){mode=b.dataset.m;render();return}
+  const lg=e.target.closest("[data-s]");if(lg){const i=+lg.dataset.s;if(on.has(i))on.delete(i);else on.add(i);render();return}
   const p=e.target.closest("[data-pa]");if(!p)return;const act=p.dataset.pa;msg="";
   if(act==="edit"){draft={profile:JSON.parse(JSON.stringify(R.profile||{})),health:""};draft.profile.fmt=draft.profile.fmt||{};editing=true;render();document.getElementById("prof").scrollIntoView({block:"start"})}
   else if(act==="cancel"){editing=false;render();document.getElementById("prof").scrollIntoView({block:"start"})}
@@ -142,7 +144,7 @@ app.addEventListener("click",async e=>{const b=e.target.closest("[data-m]");if(b
     R.profile=draft.profile;editing=false;msg="Saved. Your coach can see your changes.";render();document.getElementById("prof").scrollIntoView({block:"start"})}});
 app.addEventListener("input",e=>{if(!draft)return;const t=e.target;if(t.dataset.pk){draft.profile[t.dataset.pk]=t.value;if(t.dataset.pk==="bowlArm")render()}else if(t.dataset.fmt){draft.profile.fmt[t.dataset.fmt]=t.checked}else if(t.dataset.health)draft.health=t.value});
 (async()=>{if(sb&&code.length>=10){const{data,error}=await sb.rpc("get_report",{code});if(error)console.warn(error);R=error?null:data}
-  if(R){R.series=R.series||[];R.areas=R.areas||[];R.axes=R.axes||[];R.goals=R.goals||[];R.sessions=R.sessions||[];R.profile=R.profile||{};R.strengths=R.strengths||[];R.work=R.work||[]}
+  if(R){R.series=R.series||[];R.areas=R.areas||[];R.axes=R.axes||[];R.goals=R.goals||[];{const last=by=>{let k=-1;R.series.forEach((s,i)=>{if((s.by||(/^Coach/.test(s.name)?"coach":"self"))===by)k=i});return k};on=new Set([last("self"),last("coach")].filter(i=>i>=0));if(!on.size&&R.series.length)on.add(R.series.length-1)}R.sessions=R.sessions||[];R.profile=R.profile||{};R.strengths=R.strengths||[];R.work=R.work||[]}
   render()})();
 })();
 </script>

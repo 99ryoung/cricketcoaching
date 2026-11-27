@@ -906,8 +906,8 @@ document.getElementById("newHand").addEventListener("click",()=>{document.getEle
 let reportOpen=false;
 const reportURL=code=>location.origin+location.pathname.replace(/[^/]*$/,"")+"r.html#r="+code;
 function buildReport(p){const ov=areasFor(p,true),det=areasFor(p);const rd=v=>v==null?null:Math.round(v*10)/10;
-  const A=p.assessments.slice().sort((a,b)=>(a.date||"").localeCompare(b.date||"")).slice(-4);
-  const series=A.map(a=>({name:(a.by==="coach"?"Coach":"You")+" · "+(a.label||"Assessment")+(a.date?" · "+fmtDate(a.date):""),ov:ov.map(s=>rd(areaAvg(a.ratings||{},s))),det:Object.fromEntries(det.map(s=>[s.key,s.items.map(([k])=>typeof (a.ratings||{})[k]==="number"?a.ratings[k]:null)]))}));
+  const A=p.assessments.slice().sort((a,b)=>(a.date||"").localeCompare(b.date||"")).slice(-10);
+  const series=A.map(a=>({by:a.by||"",name:(a.by==="coach"?"Coach":"You")+" · "+(a.label||"Assessment")+(a.date?" · "+fmtDate(a.date):""),ov:ov.map(s=>rd(areaAvg(a.ratings||{},s))),det:Object.fromEntries(det.map(s=>[s.key,s.items.map(([k])=>typeof (a.ratings||{})[k]==="number"?a.ratings[k]:null)]))}));
   const {r}=ratingBasis(p);const sc=ov.map(s=>[s.name,areaAvg(r,s)]).filter(x=>x[1]!=null).sort((a,b)=>b[1]-a[1]);
   const st=sc.slice(0,2).filter(x=>x[1]>=6).map(x=>x[0]);const wk=sc.slice().reverse().filter(x=>x[1]<6&&!st.includes(x[0])).slice(0,2).map(x=>x[0]);
   return{v:REPORT_V,first:String(p.name||"").trim().split(/\s+/)[0]||"",squad:p.squad||"",ageGroup:p.ageGroup||"",updated:today(),note:p.reportNote||"",
@@ -980,7 +980,7 @@ document.addEventListener("click",async e=>{const t=e.target.closest("[data-act]
   else if(a==="importResp"){const r=pending.find(x=>x.id===t.dataset.rid);if(!r)return;mergeResponse(r);scheduleSave();try{await window.coachBackend.markImported(r.id)}catch(_){}pending=pending.filter(x=>x.id!==r.id);seriesOn={};renderRoster();renderMain()}
   else if(a==="dropResp"){if(t.dataset.sure!=="1"){t.dataset.sure="1";t.textContent="Tap again to discard";return}try{await window.coachBackend.deleteResponse(t.dataset.rid)}catch(_){}pending=pending.filter(x=>x.id!==t.dataset.rid);renderRoster();addAppBits()}
 });
-const REPORT_V=2;
+const REPORT_V=3;
 const _open=open;open=function(id){inviteOpen=false;reportOpen=false;_open(id);if(local&&local.reportCode&&(!local.report||local.report.v!==REPORT_V))scheduleSave()};
 window.addEventListener("focus",refreshPending);setInterval(()=>{if(document.visibilityState==="visible")refreshPending()},120000);
 document.getElementById("signOut").addEventListener("click",()=>window.coachBackend.signOut());
