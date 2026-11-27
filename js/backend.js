@@ -63,6 +63,9 @@
     const { data } = await sb.auth.getSession();
     const session = data && data.session;
     if (!session) { showLogin(); return null; }
+    // Player accounts belong on the player page, not the coach dashboard.
+    const isC = await sb.rpc("is_coach");
+    if (!isC.error && isC.data === false) { location.replace("player"); return null; }
     const who = document.getElementById("whoami");
     if (who) who.textContent = session.user.email;
     return db;
@@ -71,9 +74,16 @@
     if (e.target.id !== "loginForm") return;
     e.preventDefault();
     const email = document.getElementById("loginEmail").value.trim();
+    const pw = (document.getElementById("loginPw") || {}).value || "";
     if (!email) return;
     const btn = e.target.querySelector("button");
     btn.disabled = true;
+    if (pw) {
+      const r = await sb.auth.signInWithPassword({ email, password: pw });
+      btn.disabled = false;
+      if (r.error) { document.getElementById("loginMsg").textContent = "That didn't work: " + r.error.message + ". Leave the password empty to get an email link instead."; return; }
+      location.reload(); return;
+    }
     const { error } = await sb.auth.signInWithOtp({
       email, options: { shouldCreateUser: false, emailRedirectTo: location.origin + location.pathname }
     });
@@ -97,5 +107,22 @@
     const { error } = await sb.from("responses").delete().eq("id", id);
     if (error) throw err(error);
   }
-  window.coachBackend = { ready, signOut, fetchResponses, markImported, deleteResponse };
+  async function setPassword(pw) {
+    const { error } = await sb.auth.updateUser({ password: pw });
+    if (error) throw err(error);
+  }
+  async function listLogins(pid) {
+    const { data, error } = await sb.from("player_logins").select("email,added_at").eq("player_id", pid).order("added_at");
+    if (error) throw err(error);
+    return data || [];
+  }
+  async function addLogin(pid, email) {
+    const { error } = await sb.from("player_logins").insert({ player_id: pid, email: email.trim().toLowerCase() });
+    if (error && !/duplicate/i.test(error.message)) throw err(error);
+  }
+  async function removeLogin(pid, email) {
+    const { error } = await sb.from("player_logins").delete().eq("player_id", pid).eq("email", email);
+    if (error) throw err(error);
+  }
+  window.coachBackend = { ready, signOut, fetchResponses, markImported, deleteResponse, setPassword, listLogins, addLogin, removeLogin };
 })();

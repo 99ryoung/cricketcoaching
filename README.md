@@ -47,3 +47,15 @@ arrive as `responses` rows of kind `profile`; the dashboard applies them automat
 bowling action notes and session reviews are never included.
 The dashboard rebuilds that summary every time it saves the player; **Stop sharing** switches the link off.
 Needs the `report_code` column and `get_report` function at the bottom of `supabase/schema.sql`.
+
+## Player logins (player page at /player)
+
+Players and parents sign in with email and password at `/player` (served by `r.html`).
+On a player's file, **Player access** lists the emails allowed to see that player. Only those emails can create
+an account (a database trigger blocks every other sign-up), and removing an email takes access away immediately.
+Coaches are the users in the `coaches` table (whoever existed when the player-login SQL first ran).
+Supabase settings: *Allow new users to sign up* must be **on** (the trigger does the gatekeeping), keep *Confirm email* on,
+and set up custom SMTP before inviting many players, because the built-in email sender only sends a few emails an hour.
+To add another coach later: in SQL, `drop trigger only_approved_signups on auth.users;`, invite them, insert their
+`auth.users` id and email into `coaches`, then re-run the trigger section of `schema.sql`.
+Old `r.html#r=CODE` share links keep working until the coach clicks **Turn off old link**.

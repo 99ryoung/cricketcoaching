@@ -74,7 +74,9 @@ details.sess summary{cursor:pointer;font-weight:600}
 const cfg=window.APP_CONFIG||{};
 document.getElementById("top").textContent=(cfg.clubName||"Cricket club")+" · my development plan";
 const code=(new URLSearchParams(location.hash.slice(1)).get("r")||"").trim();
-const sb=cfg.supabaseUrl&&!/YOUR-PROJECT/.test(cfg.supabaseUrl)?window.supabase.createClient(cfg.supabaseUrl,cfg.supabaseAnonKey,{auth:{persistSession:false}}):null;
+const sb=cfg.supabaseUrl&&!/YOUR-PROJECT/.test(cfg.supabaseUrl)?window.supabase.createClient(cfg.supabaseUrl,cfg.supabaseAnonKey,code?{auth:{persistSession:false,detectSessionInUrl:false}}:{}):null;
+const authMode=!code;let user=null,plans=[],pid=null,auth={tab:"in",msg:"",busy:false,recovery:false};
+const here=()=>location.origin+location.pathname;
 const app=document.getElementById("app");
 const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const fmt=d=>{if(!d)return"";const x=new Date(d+"T12:00:00");return isNaN(x)?d:x.toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"})};
@@ -120,10 +122,26 @@ function chart(){let axes,series;
   const leg=`<div><div class="note" style="margin-bottom:6px">Tap an assessment to show or hide it on the chart.</div><div class="legend">${all.map(s=>`<button type="button" class="lg" data-s="${s.i}" aria-pressed="${on.has(s.i)}"><i style="background:${on.has(s.i)?s.color:"transparent"};border:2px solid ${s.color}"></i>${esc(s.name)}</button>`).join("")}</div></div>`;
   const tbl=!series.length?`<p class="note" style="text-align:center;margin:0">Tick an assessment above to draw it.</p>`:`<table><thead><tr><th>Skill</th>${series.map(s=>`<th class="n" style="color:${s.color}">${esc(s.name.split(" · ")[0])}</th>`).join("")}</tr></thead><tbody>${axes.map((a,i)=>`<tr><td>${esc(a)}</td>${series.map(s=>`<td class="n">${s.vals[i]==null?"–":(+s.vals[i]).toFixed(mode==="overview"?1:0)}</td>`).join("")}</tr>`).join("")}</tbody></table>`;
   return leg+svg+tbl}
+function authCard(){const t=auth.tab;
+  if(auth.recovery)return `<section class="card"><h3>Set a new password</h3><form class="q" data-form="newpw"><label class="f" for="a-pw">New password (at least 8 characters)<input id="a-pw" type="password" autocomplete="new-password" required minlength="8"></label>${auth.msg?`<div class="alert">${esc(auth.msg)}</div>`:""}<button class="btn primary" type="submit" ${auth.busy?"disabled":""}>Save password</button></form></section>`;
+  const tabs=[["in","Sign in"],["up","Create account"],["reset","Forgot password"]];
+  return `<div><h2>Your development plan</h2><p class="lead">Sign in to see your spider chart, goals and training sessions.</p></div>
+  <section class="card"><div class="tabs">${tabs.map(([k,l])=>`<button type="button" data-tab="${k}" aria-pressed="${k===t}">${l}</button>`).join("")}</div>
+  <form class="q" data-form="${t}">
+   ${t==="up"?`<p class="note" style="margin:0">Use the email address your coach gave access to.</p>`:""}
+   <label class="f" for="a-email">Email<input id="a-email" type="email" autocomplete="email" required value="${esc(auth.email||"")}"></label>
+   ${t!=="reset"?`<label class="f" for="a-pw">${t==="up"?"Choose a password (at least 8 characters)":"Password"}<input id="a-pw" type="password" autocomplete="${t==="up"?"new-password":"current-password"}" required ${t==="up"?'minlength="8"':""}></label>`:""}
+   ${auth.msg?`<div class="${auth.ok?"good":"alert"}">${esc(auth.msg)}</div>`:""}
+   <button class="btn primary" type="submit" ${auth.busy?"disabled":""}>${auth.busy?"Please wait…":t==="in"?"Sign in":t==="up"?"Create account":"Email me a reset link"}</button>
+  </form></section>
+  <p class="note">Your coach controls who can sign in. If your email isn't accepted, ask your coach to add it.</p>`}
+function whoBar(){return user?`<div class="nav" style="margin:0;align-items:center"><span class="note">Signed in as ${esc(user.email)}</span><button class="btn" type="button" data-auth="out" style="padding:6px 12px">Sign out</button></div>`:""}
 function render(){
+  if(authMode&&!user||authMode&&auth.recovery){app.innerHTML=authCard();return}
+  if(authMode&&!R){app.innerHTML=whoBar()+(auth.coach?`<section class="card"><h3>You're signed in as a coach</h3><p style="margin:0">Players see their plans here. <a href="index.html">Open the coach dashboard</a>.</p></section>`:`<section class="card"><h3>Nothing to show yet</h3><p style="margin:0">Your account works, but your coach hasn't linked it to a player yet (or has removed access). Ask your coach to check the email they added.</p></section>`);return}
   if(!R){app.innerHTML=`<h2>This link isn't working</h2><p class="lead">Ask your coach to send you a new link.</p>`;return}
   const tabs=[["overview","Overview"],...R.areas.map(a=>[a.key,a.name])];
-  let h=`<div><h2>${esc(R.first?R.first+"'s":"My")} development plan</h2><p class="lead">${esc([R.squad,R.ageGroup].filter(Boolean).join(" · "))}${R.updated?" · updated "+esc(fmt(R.updated)):""}</p></div>`;
+  let h=whoBar()+(plans.length>1?`<div class="tabs">${plans.map(p=>`<button type="button" data-pid="${esc(p.id)}" aria-pressed="${p.id===pid}">${esc((p.report&&p.report.first)||"Player")}</button>`).join("")}</div>`:"")+`<div><h2>${esc(R.first?R.first+"'s":"My")} development plan</h2><p class="lead">${esc([R.squad,R.ageGroup].filter(Boolean).join(" · "))}${R.updated?" · updated "+esc(fmt(R.updated)):""}</p></div>`;
   if(R.note)h+=`<section class="card"><h3>From your coach</h3><p style="margin:0;white-space:pre-wrap">${esc(R.note)}</p></section>`;
   if(R.series.length){h+=`<section class="card"><h3>Your skills</h3><p class="note" style="margin:0">Ratings out of 10. "You" is your own rating, "Coach" is your coach's.</p><div class="tabs">${tabs.map(([k,l])=>`<button type="button" data-m="${esc(k)}" aria-pressed="${k===mode}">${esc(l)}</button>`).join("")}</div>${chart()}</section>`}
   if(R.strengths.length||R.work.length)h+=`<section class="card"><h3>Where you are now</h3>${R.strengths.length?`<div class="good"><b>Strengths to build on:</b> ${R.strengths.map(esc).join(", ")}</div>`:""}${R.work.length?`<div class="alert"><b>Areas to work on:</b> ${R.work.map(esc).join(", ")}</div>`:""}</section>`;
@@ -139,13 +157,37 @@ app.addEventListener("click",async e=>{const b=e.target.closest("[data-m]");if(b
   if(act==="edit"){draft={profile:JSON.parse(JSON.stringify(R.profile||{})),health:""};draft.profile.fmt=draft.profile.fmt||{};editing=true;render();document.getElementById("prof").scrollIntoView({block:"start"})}
   else if(act==="cancel"){editing=false;render();document.getElementById("prof").scrollIntoView({block:"start"})}
   else if(act==="save"){saving=true;render();
-    const{data,error}=await sb.rpc("update_profile",{code,payload:{kind:"profile",profile:draft.profile,health:draft.health||""}});saving=false;
+    const pl={kind:"profile",profile:draft.profile,health:draft.health||""};const{data,error}=authMode?await sb.rpc("update_my_profile",{pid,payload:pl}):await sb.rpc("update_profile",{code,payload:pl});saving=false;
     if(error||data!==true){msg="That didn't save. Check your signal and try again.";render();return}
     R.profile=draft.profile;editing=false;msg="Saved. Your coach can see your changes.";render();document.getElementById("prof").scrollIntoView({block:"start"})}});
 app.addEventListener("input",e=>{if(!draft)return;const t=e.target;if(t.dataset.pk){draft.profile[t.dataset.pk]=t.value;if(t.dataset.pk==="bowlArm")render()}else if(t.dataset.fmt){draft.profile.fmt[t.dataset.fmt]=t.checked}else if(t.dataset.health)draft.health=t.value});
-(async()=>{if(sb&&code.length>=10){const{data,error}=await sb.rpc("get_report",{code});if(error)console.warn(error);R=error?null:data}
-  if(R){R.series=R.series||[];R.areas=R.areas||[];R.axes=R.axes||[];R.goals=R.goals||[];{const last=by=>{let k=-1;R.series.forEach((s,i)=>{if((s.by||(/^Coach/.test(s.name)?"coach":"self"))===by)k=i});return k};on=new Set([last("self"),last("coach")].filter(i=>i>=0));if(!on.size&&R.series.length)on.add(R.series.length-1)}R.sessions=R.sessions||[];R.profile=R.profile||{};R.strengths=R.strengths||[];R.work=R.work||[]}
-  render()})();
+function useReport(rep){R=rep;mode="overview";editing=false;msg="";
+  if(R){R.series=R.series||[];R.areas=R.areas||[];R.axes=R.axes||[];R.goals=R.goals||[];{const last=by=>{let k=-1;R.series.forEach((s,i)=>{if((s.by||(/^Coach/.test(s.name)?"coach":"self"))===by)k=i});return k};on=new Set([last("self"),last("coach")].filter(i=>i>=0));if(!on.size&&R.series.length)on.add(R.series.length-1)}R.sessions=R.sessions||[];R.profile=R.profile||{};R.strengths=R.strengths||[];R.work=R.work||[]}}
+async function loadPlans(){const{data,error}=await sb.rpc("my_plans");if(error){console.warn(error);plans=[]}else plans=data||[];
+  if(!plans.length){const c=await sb.rpc("is_coach");auth.coach=!c.error&&c.data===true}
+  const keep=plans.find(p=>p.id===pid)||plans[0];pid=keep?keep.id:null;useReport(keep?keep.report:null);render()}
+app.addEventListener("click",async e=>{const t=e.target.closest("[data-tab]");if(t){auth.tab=t.dataset.tab;auth.msg="";auth.email=(document.getElementById("a-email")||{}).value||auth.email;render();return}
+  const p=e.target.closest("[data-pid]");if(p){pid=p.dataset.pid;useReport((plans.find(x=>x.id===pid)||{}).report||null);render();return}
+  if(e.target.closest("[data-auth=out]")){await sb.auth.signOut();user=null;R=null;plans=[];render()}});
+app.addEventListener("submit",async e=>{const f=e.target.closest("[data-form]");if(!f)return;e.preventDefault();const kind=f.dataset.form;
+  const em=((document.getElementById("a-email")||{}).value||"").trim().toLowerCase(),pw=(document.getElementById("a-pw")||{}).value||"";auth.email=em;auth.busy=true;auth.msg="";auth.ok=false;render();let res;
+  try{
+   if(kind==="in"){res=await sb.auth.signInWithPassword({email:em,password:pw});if(res.error)auth.msg=/confirm/i.test(res.error.message)?"Please confirm your email first. Check your inbox for the link we sent.":"Email or password not recognised. Try again, or use Forgot password.";}
+   else if(kind==="up"){res=await sb.auth.signUp({email:em,password:pw,options:{emailRedirectTo:here()}});
+     if(res.error)auth.msg=/database error|not been given access/i.test(res.error.message)?"This email hasn't been given access yet. Ask your coach to add it, then try again.":/registered|exists/i.test(res.error.message)?"There's already an account for this email. Use Sign in, or Forgot password.":"That didn't work: "+res.error.message;
+     else if(!res.data.session){auth.ok=true;auth.msg="Nearly done. We've sent you an email: tap the link in it to confirm, then come back here and sign in.";auth.tab="in"}}
+   else if(kind==="reset"){res=await sb.auth.resetPasswordForEmail(em,{redirectTo:here()});auth.ok=!res.error;auth.msg=res.error?"That didn't work: "+res.error.message:"If that email has an account, we've sent a link to reset the password.";}
+   else if(kind==="newpw"){res=await sb.auth.updateUser({password:pw});if(res.error)auth.msg="That didn't work: "+res.error.message;else{auth.recovery=false;auth.msg=""}}
+  }catch(err){auth.msg="Something went wrong. Check your signal and try again."}
+  auth.busy=false;render()});
+(async()=>{
+  if(!sb){render();return}
+  if(!authMode){if(code.length>=10){const{data,error}=await sb.rpc("get_report",{code});if(error)console.warn(error);useReport(error?null:data)}render();return}
+  sb.auth.onAuthStateChange((ev,session)=>{if(ev==="PASSWORD_RECOVERY"){auth.recovery=true;auth.msg="";}
+    const nu=session&&session.user||null;const changed=(nu&&nu.id)!==(user&&user.id);user=nu;
+    if(changed&&user)setTimeout(loadPlans,0);else render()});
+  app.innerHTML=`<p class="lead">Loading…</p>`;
+})();
 })();
 </script>
 </body>

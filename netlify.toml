@@ -7,3 +7,8 @@
     X-Frame-Options = "DENY"
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "no-referrer"
+
+[[redirects]]
+  from = "/player"
+  to = "/r.html"
+  status = 200

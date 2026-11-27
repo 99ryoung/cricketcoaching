@@ -193,7 +193,7 @@ body.pm-on{overflow:hidden}
 #login{position:fixed;inset:0;z-index:80;background:var(--bg);display:grid;place-items:center;padding:16px}
 #login form{width:100%;max-width:380px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:24px;display:grid;gap:12px}
 #login h1{font-family:var(--display);font-size:30px;margin:0;text-transform:uppercase;letter-spacing:.03em}
-.who{font-size:12.5px;opacity:.8;display:flex;gap:8px;align-items:center}
+.who{font-size:12.5px;opacity:.8;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .who button{background:none;border:0;color:inherit;text-decoration:underline;cursor:pointer;font-size:12.5px;padding:0}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
@@ -201,11 +201,11 @@ body.pm-on{overflow:hidden}
 <script src="js/backend.js" defer></script>
 </head>
 <body>
-<div id="login" hidden><form id="loginForm"><h1>Coach sign-in</h1><p class="note" style="margin:0">Enter the email address your coach account uses. We'll email you a sign-in link.</p><label class="f" for="loginEmail">Email<input type="email" id="loginEmail" autocomplete="email" required></label><button class="btn primary" type="submit">Email me a sign-in link</button><p class="note" id="loginMsg" style="margin:0"></p><p class="note" style="margin:0">Players: use the questionnaire link your coach sent you.</p></form></div>
+<div id="login" hidden><form id="loginForm"><h1>Coach sign-in</h1><p class="note" style="margin:0">Sign in with your coach email and password. No password yet? Leave it blank and we'll email you a sign-in link, then use <b>Set password</b> at the top once you're in.</p><label class="f" for="loginEmail">Email<input type="email" id="loginEmail" autocomplete="email" required></label><label class="f" for="loginPw">Password<input type="password" id="loginPw" autocomplete="current-password"></label><button class="btn primary" type="submit">Sign in</button><p class="note" id="loginMsg" style="margin:0"></p><p class="note" style="margin:0">Players and parents: sign in at <a href="player">the player page</a>.</p></form></div>
 
 <header class="top">
   <div class="top-in">
-    <div class="brand"><h1>Fledbury CC Coaching</h1><p>Individual Development Plans and baseline assessments</p><div class="who"><span id="whoami"></span><button type="button" id="signOut">Sign out</button></div></div>
+    <div class="brand"><h1>Fledbury CC Coaching</h1><p>Individual Development Plans and baseline assessments</p><div class="who"><span id="whoami"></span><button type="button" id="setPw">Set password</button><button type="button" id="signOut">Sign out</button><span id="pwBox" hidden><input type="password" id="newPw" placeholder="New password (8+ characters)" autocomplete="new-password" style="padding:4px 6px;border-radius:4px;border:1px solid #fff6;background:#fff;color:#18231c;font-size:13px"><button type="button" id="savePw">Save</button><span id="pwMsg"></span></span></div></div>
     <div class="row">
       <button class="btn" id="copyQ" type="button">Copy player questionnaire</button>
       <button class="btn" id="newHand" type="button">New player questionnaire</button>
@@ -351,7 +351,7 @@ async function flush(){
   if(!db||!cur){saveState.dirty=false;return}
   if(saveState.writing){saveState.again=true;return}
   saveState.writing=true;saveState.dirty=false;
-  const id=cur, body=clone(local);if(body.reportCode)body.report=buildReport(body);else delete body.report;if(local&&cur===id){if(body.report)local.report=clone(body.report);else delete local.report}
+  const id=cur, body=clone(local);body.report=buildReport(body);if(local&&cur===id)local.report=clone(body.report);
   saveState.lastJSON=JSON.stringify(body);
   try{await db.collection("players").doc(id).set(body);banner("")}
   catch(e){banner(e&&e.code==="quota_exceeded"?"Storage is full. Delete old players to free space.":"Couldn't save the last change ("+(e&&e.message||e&&e.code||"error")+"). Keep this page open and try again.")}
@@ -929,22 +929,35 @@ function applyProfileEdit(p,r){const d=r.data||{},pr=d.profile||{},ch=[];
   if(ch.length)p.playerEdit={date:dt,fields:[...new Set([...(p.playerEdit&&p.playerEdit.date===dt?p.playerEdit.fields:[]),...ch])]};
   return ch.length}
 async function applyPlayerEdits(){const edits=pending.filter(r=>r.data&&r.data.kind==="profile");if(!edits.length)return;
-  for(const r of edits){const id=Object.keys(players).find(k=>players[k]&&players[k].reportCode&&players[k].reportCode===r.invite_code);
+  for(const r of edits){const id=Object.keys(players).find(k=>players[k]&&(r.invite_code==="pid:"+k||(players[k].reportCode&&players[k].reportCode===r.invite_code)));
     if(id){if(id===cur&&local){if(applyProfileEdit(local,r))scheduleSave()}
       else{const p=clone(players[id]);if(applyProfileEdit(p,r)){p.report=buildReport(p);try{await db.collection("players").doc(id).set(p);players[id]=p}catch(_){continue}}}}
     try{await window.coachBackend.markImported(r.id)}catch(_){}}
   const ids=new Set(edits.map(r=>r.id));pending=pending.filter(r=>!ids.has(r.id));if(local)renderMain();renderRoster()}
-function reportCard(){const L=local;if(!L.reportCode)return `<section class="card"><h3>Player view</h3><p class="hint">Create a private, view-only page for ${esc(L.name||"this player")} showing their spider chart, strengths and areas to work on, IDP goals and actions, planned training sessions and next review date. They can also update their own cricket profile, and changes come straight into their file. It never shows medical or injury details, your coach notes, bowling action notes, session reviews or your other players. It updates itself whenever you change their file.</p><div><button class="btn small primary" type="button" data-act="makeReport">Create player view</button></div></section>`;
-  const u=reportURL(L.reportCode);
-  return `<section class="card"><h3>Player view</h3><p class="hint">Send this to ${esc(L.name||"the player")}${isJunior(L)?" (and their parent or guardian)":""}. It shows their spider chart, strengths and areas to work on, IDP goals and actions, planned training sessions and next review, and updates when you edit their file. They can update their own cricket profile (and tell you about a new injury); those changes come straight into their file. Medical details, your notes and session reviews are never shown.</p>
-   <div class="row"><input type="text" readonly id="reportUrl" value="${esc(u)}" style="flex:1;min-width:0"><button class="btn small" type="button" data-act="copyReport">Copy</button><a class="btn small" style="text-decoration:none;color:inherit" href="https://wa.me/?text=${encodeURIComponent("Here's your Fledbury CC development plan: "+u)}" target="_blank" rel="noopener">WhatsApp</a><a class="btn small" style="text-decoration:none;color:inherit" href="${esc(u)}" target="_blank" rel="noopener">Preview</a></div>
-   <label class="f" style="display:grid;gap:4px"><span style="font-weight:600">Message to the player (optional, shown at the top)</span><textarea id="reportNote" rows="3">${esc(L.reportNote||"")}</textarea></label>
-   <div class="row"><span class="note">Anyone with this link can see this page.</span><span class="spacer"></span><button class="btn small" type="button" data-act="resetReport">Replace link</button><button class="btn small danger" type="button" data-act="stopReport">Stop sharing</button></div></section>`}
+let logins={pid:null,list:[],msg:"",busy:false};
+const playerPage=()=>location.origin+location.pathname.replace(/[^/]*$/,"")+"player";
+async function loadLogins(){const pid=cur;if(!pid)return;try{const l=await window.coachBackend.listLogins(pid);if(cur===pid){logins={pid,list:l,msg:logins.pid===pid?logins.msg:"",busy:false}}}catch(e){logins={pid,list:[],msg:"Couldn't load logins ("+(e.message||e.code)+"). Has the latest database update been run?",busy:false}}addAppBits()}
+function reportCard(){const L=local,first=esc((L.name||"the player").split(" ")[0]);
+  if(logins.pid!==cur){loadLogins();return `<section class="card"><h3>Player access</h3><p class="note">Loading…</p></section>`}
+  const u=playerPage();
+  return `<section class="card"><h3>Player access</h3><p class="hint">Only the emails listed here can create an account and sign in to see ${first}'s page: their spider chart, strengths and areas to work on, IDP goals, planned training sessions and their own cricket profile, which they can edit. ${isJunior(L)?"For juniors, add the parent or guardian's email (and the player's own if they're old enough). ":""}Medical details, your notes and session reviews are never shown. Remove an email to take access away straight away.</p>
+   ${logins.list.length?`<div style="display:grid;gap:6px">${logins.list.map(x=>`<div class="row" style="gap:8px"><span>${esc(x.email)}</span><span class="note">added ${esc(fmtDate((x.added_at||"").slice(0,10)))}</span><span class="spacer"></span><button class="btn small danger" type="button" data-act="rmLogin" data-email="${esc(x.email)}">Remove</button></div>`).join("")}</div>`:`<p class="note" style="margin:0">No one has access yet.</p>`}
+   <div class="row"><input type="email" id="loginAdd" placeholder="Email address" autocomplete="off" style="flex:1;min-width:0"><button class="btn small primary" type="button" data-act="addLogin" ${logins.busy?"disabled":""}>Give access</button></div>
+   ${logins.msg?`<div class="callout">${esc(logins.msg)}</div>`:""}
+   <label class="f" style="display:grid;gap:4px"><span style="font-weight:600">Message to ${first} (optional, shown at the top of their page)</span><textarea id="reportNote" rows="2">${esc(L.reportNote||"")}</textarea></label>
+   <div class="callout" style="font-size:14px"><b>Then send them this:</b> "Go to ${esc(u)}, tap <i>Create account</i> and use this email with a password of your choice."
+   <div class="row" style="margin-top:6px"><button class="btn small" type="button" data-act="copyPlayerPage">Copy message</button><a class="btn small" style="text-decoration:none;color:inherit" href="https://wa.me/?text=${encodeURIComponent("Your Fledbury CC development plan is ready. Go to "+u+", tap Create account and use your email with a password of your choice.")}" target="_blank" rel="noopener">WhatsApp</a></div></div>
+   ${L.reportCode?`<div class="row"><span class="note">The older share link for ${first} still works for anyone who has it.</span><span class="spacer"></span><button class="btn small danger" type="button" data-act="stopReport">Turn off old link</button></div>`:""}
+  </section>`}
 document.addEventListener("input",e=>{if(e.target.id==="reportNote"&&local){local.reportNote=e.target.value;scheduleSave()}});
 document.addEventListener("click",async e=>{const t=e.target.closest("[data-act]");if(!t||!local)return;const a=t.dataset.act;
   if(a==="ackEdit"){delete local.playerEdit;scheduleSave();addAppBits()}
   else if(a==="reportToggle"){reportOpen=!reportOpen;addAppBits()}
   else if(a==="makeReport"||a==="resetReport"){local.reportCode=newCode();scheduleSave();reportOpen=true;addAppBits()}
+  else if(a==="addLogin"){const i=document.getElementById("loginAdd");const em=(i.value||"").trim().toLowerCase();if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)){logins.msg="That doesn't look like an email address.";addAppBits();return}
+    logins.busy=true;logins.msg="";addAppBits();try{await window.coachBackend.addLogin(cur,em);logins.msg=em+" can now create an account and sign in.";logins.pid=null;loadLogins()}catch(err){logins.busy=false;logins.msg="Couldn't add it ("+(err.message||err.code)+").";addAppBits()}}
+  else if(a==="rmLogin"){if(t.dataset.sure!=="1"){t.dataset.sure="1";t.textContent="Tap again to remove";return}try{await window.coachBackend.removeLogin(cur,t.dataset.email);logins.msg=t.dataset.email+" no longer has access.";logins.pid=null;loadLogins()}catch(err){logins.msg="Couldn't remove it ("+(err.message||err.code)+").";addAppBits()}}
+  else if(a==="copyPlayerPage"){const m="Your Fledbury CC development plan is ready. Go to "+playerPage()+", tap Create account and use your email with a password of your choice.";try{await navigator.clipboard.writeText(m);t.textContent="Copied"}catch(_){}}
   else if(a==="stopReport"){if(t.dataset.sure!=="1"){t.dataset.sure="1";t.textContent="Tap again to stop sharing";return}delete local.reportCode;scheduleSave();addAppBits()}
   else if(a==="copyReport"){const i=document.getElementById("reportUrl");try{await navigator.clipboard.writeText(i.value);t.textContent="Copied"}catch(_){i.select()}}
 });
@@ -954,9 +967,9 @@ const inviteURL=code=>location.origin+location.pathname.replace(/[^/]*$/,"")+"q.
 function newCode(){const a="abcdefghjkmnpqrstuvwxyz23456789";let s="";const r=crypto.getRandomValues(new Uint8Array(12));r.forEach(n=>s+=a[n%a.length]);return s}
 async function refreshPending(){try{pending=await window.coachBackend.fetchResponses()}catch(e){pending=[]}await applyPlayerEdits();renderRoster();if(local)addAppBits()}
 const pendingFor=p=>p&&p.inviteCode?pending.filter(r=>r.invite_code===p.inviteCode):[];
-function addAppBits(){const m=$("#main");if(!m||!local)return;if(local.reportCode&&(!local.report||local.report.v!==REPORT_V||JSON.stringify(local.report.sessions||[])!==JSON.stringify(buildReport(local).sessions)))scheduleSave();const head=m.querySelector(".phead .row");
+function addAppBits(){const m=$("#main");if(!m||!local)return;if((!local.report||local.report.v!==REPORT_V||JSON.stringify(local.report.sessions||[])!==JSON.stringify(buildReport(local).sessions)))scheduleSave();const head=m.querySelector(".phead .row");
   if(head&&!head.querySelector("[data-act=inviteToggle]")){const b=document.createElement("button");b.className="btn";b.type="button";b.dataset.act="inviteToggle";b.textContent="Questionnaire link";head.insertBefore(b,head.firstChild)}
-  if(head&&!head.querySelector("[data-act=reportToggle]")){const b=document.createElement("button");b.className="btn";b.type="button";b.dataset.act="reportToggle";b.textContent="Player view";head.insertBefore(b,head.firstChild.nextSibling)}
+  if(head&&!head.querySelector("[data-act=reportToggle]")){const b=document.createElement("button");b.className="btn";b.type="button";b.dataset.act="reportToggle";b.textContent="Player access";head.insertBefore(b,head.firstChild.nextSibling)}
   m.querySelectorAll(".app-box").forEach(x=>x.remove());
   const box=document.createElement("div");box.className="app-box";let h="";
   pendingFor(local).forEach(r=>{const n=(r.data&&r.data.name)||"The player";h+=`<section class="card" style="border-color:var(--accent)"><div class="row"><b>New questionnaire answers from ${esc(n)}</b><span class="note">Sent ${esc(new Date(r.submitted_at).toLocaleString("en-GB",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}))}</span><span class="spacer"></span><button class="btn small primary" type="button" data-act="importResp" data-rid="${esc(r.id)}">Add to this file</button><button class="btn small" type="button" data-act="dropResp" data-rid="${esc(r.id)}">Discard</button></div><p class="note" style="margin:0">Adding fills in any profile answers they gave and saves their ratings as a new self-assessment. Your coach notes, goals and sessions aren't changed.</p></section>`});
@@ -981,9 +994,12 @@ document.addEventListener("click",async e=>{const t=e.target.closest("[data-act]
   else if(a==="dropResp"){if(t.dataset.sure!=="1"){t.dataset.sure="1";t.textContent="Tap again to discard";return}try{await window.coachBackend.deleteResponse(t.dataset.rid)}catch(_){}pending=pending.filter(x=>x.id!==t.dataset.rid);renderRoster();addAppBits()}
 });
 const REPORT_V=3;
-const _open=open;open=function(id){inviteOpen=false;reportOpen=false;_open(id);if(local&&local.reportCode&&(!local.report||local.report.v!==REPORT_V))scheduleSave()};
+const _open=open;open=function(id){inviteOpen=false;reportOpen=false;_open(id);if(local&&(!local.report||local.report.v!==REPORT_V))scheduleSave()};
 window.addEventListener("focus",refreshPending);setInterval(()=>{if(document.visibilityState==="visible")refreshPending()},120000);
 document.getElementById("signOut").addEventListener("click",()=>window.coachBackend.signOut());
+document.getElementById("setPw").addEventListener("click",()=>{const b=document.getElementById("pwBox");b.hidden=!b.hidden;if(!b.hidden)document.getElementById("newPw").focus()});
+document.getElementById("savePw").addEventListener("click",async()=>{const pw=document.getElementById("newPw").value,m=document.getElementById("pwMsg");if(pw.length<8){m.textContent=" Use at least 8 characters.";return}
+  try{await window.coachBackend.setPassword(pw);m.textContent=" Saved. Use it next time you sign in.";document.getElementById("newPw").value=""}catch(e){m.textContent=" Couldn't save: "+(e.message||e.code)}});
 window.addEventListener("load",init);
 })();
 </script>
