@@ -43,6 +43,11 @@ create policy "coach deletes own responses" on public.responses
   for delete to authenticated
   using (exists (select 1 from public.players p where p.invite_code = responses.invite_code and p.coach_id = auth.uid()));
 
+-- Newer Supabase projects don't give the signed-in role table access automatically.
+grant usage on schema public to anon, authenticated;
+grant select, insert, update, delete on public.players to authenticated;
+grant select, update, delete on public.responses to authenticated;
+
 -- What a player's link is allowed to see: first name, squad and age group only.
 create or replace function public.get_invite(code text)
 returns json language sql stable security definer set search_path = public as $$
