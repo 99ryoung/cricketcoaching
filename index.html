@@ -910,7 +910,7 @@ function buildReport(p){const ov=areasFor(p,true),det=areasFor(p);const rd=v=>v=
   const series=A.map(a=>({name:(a.by==="coach"?"Coach":"You")+" · "+(a.label||"Assessment")+(a.date?" · "+fmtDate(a.date):""),ov:ov.map(s=>rd(areaAvg(a.ratings||{},s))),det:Object.fromEntries(det.map(s=>[s.key,s.items.map(([k])=>typeof (a.ratings||{})[k]==="number"?a.ratings[k]:null)]))}));
   const {r}=ratingBasis(p);const sc=ov.map(s=>[s.name,areaAvg(r,s)]).filter(x=>x[1]!=null).sort((a,b)=>b[1]-a[1]);
   const st=sc.slice(0,2).filter(x=>x[1]>=6).map(x=>x[0]);const wk=sc.slice().reverse().filter(x=>x[1]<6&&!st.includes(x[0])).slice(0,2).map(x=>x[0]);
-  return{v:1,first:String(p.name||"").trim().split(/\s+/)[0]||"",squad:p.squad||"",ageGroup:p.ageGroup||"",updated:today(),note:p.reportNote||"",
+  return{v:REPORT_V,first:String(p.name||"").trim().split(/\s+/)[0]||"",squad:p.squad||"",ageGroup:p.ageGroup||"",updated:today(),note:p.reportNote||"",
     axes:ov.map(s=>s.name),areas:det.map(s=>({key:s.key,name:s.name,items:s.items.map(i=>i[1])})),series,strengths:st,work:wk,
     goals:(p.goals||[]).map((g,i)=>[g,i+1]).filter(([g])=>g.goal).map(([g,n])=>({n,goal:g.goal,corner:g.corner||"",measure:g.measure||"",target:g.target||"",status:g.status||"",actions:(g.actions||[]).filter(x=>x.text).map(x=>({text:x.text,owner:x.owner||"",due:x.due||"",done:!!x.done}))})),
     nextReview:p.nextReview||"",
@@ -980,7 +980,8 @@ document.addEventListener("click",async e=>{const t=e.target.closest("[data-act]
   else if(a==="importResp"){const r=pending.find(x=>x.id===t.dataset.rid);if(!r)return;mergeResponse(r);scheduleSave();try{await window.coachBackend.markImported(r.id)}catch(_){}pending=pending.filter(x=>x.id!==r.id);seriesOn={};renderRoster();renderMain()}
   else if(a==="dropResp"){if(t.dataset.sure!=="1"){t.dataset.sure="1";t.textContent="Tap again to discard";return}try{await window.coachBackend.deleteResponse(t.dataset.rid)}catch(_){}pending=pending.filter(x=>x.id!==t.dataset.rid);renderRoster();addAppBits()}
 });
-const _open=open;open=function(id){inviteOpen=false;reportOpen=false;_open(id)};
+const REPORT_V=2;
+const _open=open;open=function(id){inviteOpen=false;reportOpen=false;_open(id);if(local&&local.reportCode&&(!local.report||local.report.v!==REPORT_V))scheduleSave()};
 window.addEventListener("focus",refreshPending);setInterval(()=>{if(document.visibilityState==="visible")refreshPending()},120000);
 document.getElementById("signOut").addEventListener("click",()=>window.coachBackend.signOut());
 window.addEventListener("load",init);
