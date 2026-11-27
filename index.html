@@ -351,7 +351,7 @@ async function flush(){
   if(!db||!cur){saveState.dirty=false;return}
   if(saveState.writing){saveState.again=true;return}
   saveState.writing=true;saveState.dirty=false;
-  const id=cur, body=clone(local);if(body.reportCode)body.report=buildReport(body);else delete body.report;
+  const id=cur, body=clone(local);if(body.reportCode)body.report=buildReport(body);else delete body.report;if(local&&cur===id){if(body.report)local.report=clone(body.report);else delete local.report}
   saveState.lastJSON=JSON.stringify(body);
   try{await db.collection("players").doc(id).set(body);banner("")}
   catch(e){banner(e&&e.code==="quota_exceeded"?"Storage is full. Delete old players to free space.":"Couldn't save the last change ("+(e&&e.message||e&&e.code||"error")+"). Keep this page open and try again.")}
