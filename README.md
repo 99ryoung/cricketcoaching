@@ -16,7 +16,7 @@ No build step: it's plain HTML and JavaScript, with data stored in Supabase.
 3. Go to **Authentication → Sign In / Providers**. Keep **Email** on and turn **Allow new users to sign up** off, so only coaches you add can sign in.
 4. Go to **Authentication → Users → Add user → Send invitation** and add your own email (and any other coaches).
 5. Go to **Authentication → URL Configuration**. Set **Site URL** to your Netlify address (step 2) and add it under **Redirect URLs**.
-6. Go to **Project Settings → API** and copy the **Project URL** and **anon public** key into `js/config.js`. Never use the `service_role` key here.
+6. Go to **Project Settings → API** and copy the **Project URL** and the **publishable key** (or legacy anon key) into `js/config.js`. Never use the `service_role` key here.
 
 ### 2. Netlify (hosting)
 1. Sign in to netlify.com with GitHub and choose **Add new site → Import an existing project → GitHub → cricketcoaching**.
