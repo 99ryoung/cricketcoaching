@@ -41,7 +41,9 @@ No build step: it's plain HTML and JavaScript, with data stored in Supabase.
 ## Player view (r.html)
 
 On a player's page, click **Player view → Create player view** to get a private, read-only link (`r.html#r=CODE`).
-It shows the spider chart, strengths and areas to work on, IDP goals and actions, and the next review date, plus an optional
-message from the coach. It never shows profile answers, medical details, bowling action notes or session notes.
+It shows the spider chart, strengths and areas to work on, IDP goals and actions, planned training sessions and the next review date,
+plus an optional message from the coach and the player's own cricket profile, which they can edit. Edits (and any injury update)
+arrive as `responses` rows of kind `profile`; the dashboard applies them automatically. Medical details, coach notes,
+bowling action notes and session reviews are never included.
 The dashboard rebuilds that summary every time it saves the player; **Stop sharing** switches the link off.
 Needs the `report_code` column and `get_report` function at the bottom of `supabase/schema.sql`.

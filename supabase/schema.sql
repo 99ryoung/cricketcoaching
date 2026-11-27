@@ -91,3 +91,55 @@ returns json language sql stable security definer set search_path = public as $$
 $$;
 revoke all on function public.get_report(text) from public;
 grant execute on function public.get_report(text) to anon, authenticated;
+
+-- Player profile edits from the player view. They land in responses (kind "profile");
+-- the coach dashboard applies them automatically. get_report shows them straight away.
+drop policy if exists "coach reads own responses" on public.responses;
+create policy "coach reads own responses" on public.responses
+  for select to authenticated
+  using (exists (select 1 from public.players p where (p.invite_code = responses.invite_code or p.report_code = responses.invite_code) and p.coach_id = auth.uid()));
+drop policy if exists "coach updates own responses" on public.responses;
+create policy "coach updates own responses" on public.responses
+  for update to authenticated
+  using (exists (select 1 from public.players p where (p.invite_code = responses.invite_code or p.report_code = responses.invite_code) and p.coach_id = auth.uid()));
+drop policy if exists "coach deletes own responses" on public.responses;
+create policy "coach deletes own responses" on public.responses
+  for delete to authenticated
+  using (exists (select 1 from public.players p where (p.invite_code = responses.invite_code or p.report_code = responses.invite_code) and p.coach_id = auth.uid()));
+
+create or replace function public.update_profile(code text, payload jsonb)
+returns boolean language plpgsql security definer set search_path = public as $$
+begin
+  if length(code) < 10 or not exists (select 1 from public.players where report_code = code) then
+    return false;
+  end if;
+  if (select count(*) from public.responses where invite_code = code and submitted_at > now() - interval '1 day') >= 20 then
+    return false;
+  end if;
+  if pg_column_size(payload) > 30000 then
+    return false;
+  end if;
+  insert into public.responses (invite_code, data)
+  values (code, jsonb_build_object('kind', 'profile', 'profile', coalesce(payload->'profile', '{}'::jsonb), 'health', coalesce(payload->>'health', '')));
+  return true;
+end;
+$$;
+revoke all on function public.update_profile(text, jsonb) from public;
+grant execute on function public.update_profile(text, jsonb) to anon, authenticated;
+
+create or replace function public.get_report(code text)
+returns json language plpgsql stable security definer set search_path = public as $$
+declare rep jsonb; prof jsonb; r record;
+begin
+  select data->'report' into rep from public.players where report_code = code and length(code) >= 10;
+  if rep is null then return null; end if;
+  prof := coalesce(rep->'profile', '{}'::jsonb);
+  for r in select data from public.responses
+           where invite_code = code and imported_at is null and data->>'kind' = 'profile'
+           order by submitted_at loop
+    prof := prof || (coalesce(r.data->'profile', '{}'::jsonb) - 'fmt')
+                 || jsonb_build_object('fmt', coalesce(prof->'fmt', '{}'::jsonb) || coalesce(r.data->'profile'->'fmt', '{}'::jsonb));
+  end loop;
+  return (rep || jsonb_build_object('profile', prof))::json;
+end;
+$$;
