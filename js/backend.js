@@ -33,7 +33,7 @@
           return {
             async set(body) {
               const { error } = await sb.from("players").upsert({
-                id, data: body, invite_code: body.inviteCode || null, updated_at: new Date().toISOString()
+                id, data: body, invite_code: body.inviteCode || null, report_code: body.reportCode || null, updated_at: new Date().toISOString()
               });
               if (error) throw err(error);
               const i = rows.findIndex((r) => r.id === id);

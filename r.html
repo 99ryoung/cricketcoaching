@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>My Development Plan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Source+Sans+3:wght@400;600;700&display=swap">
+<style>
+:root{--bg:#f3f5f1;--surface:#fff;--surface-2:#eaeee6;--line:#d3dacd;--fg:#18231c;--muted:#5b6a5f;--accent:#1f6b3a;--accent-fg:#fff;--ball:#a4161a;--warn-soft:#fbecd2;
+  --display:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;--body:"Source Sans 3",system-ui,-apple-system,"Segoe UI",sans-serif;--r:8px}
+@media (prefers-color-scheme: dark){:root{--bg:#111814;--surface:#18211b;--surface-2:#202b24;--line:#2f3d33;--fg:#e5ece6;--muted:#9aab9e;--accent:#5cbf7d;--accent-fg:#0d1a11;--ball:#f07a7d;--warn-soft:#3a2c14;color-scheme:dark}}
+*{box-sizing:border-box}html,body{margin:0}[hidden]{display:none!important}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;line-height:1.45}
+button,input,select,textarea{font:inherit;color:inherit}
+.top{background:#1d3557;color:#fff;padding:12px max(16px,env(safe-area-inset-right,0px)) 12px max(16px,env(safe-area-inset-left,0px));padding-top:calc(env(safe-area-inset-top,0px) + 12px);font-family:var(--display);font-size:19px;letter-spacing:.04em;text-transform:uppercase;position:sticky;top:0;z-index:2}
+.body{max-width:640px;margin:0 auto;padding-block:18px 60px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:16px}
+h1,h2{font-family:var(--display);font-weight:700;margin:0;line-height:1.05;text-wrap:balance}h2{font-size:30px}
+.lead{margin:0;color:var(--muted)}
+.q{display:grid;gap:14px}
+label.f{display:grid;gap:5px;font-weight:600}
+input[type=text],input[type=number],select,textarea{width:100%;background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:10px;font-size:16px;font-weight:400}
+textarea{min-height:80px;resize:vertical}
+.check{display:flex;gap:10px;align-items:flex-start;font-weight:400}.check input{width:20px;height:20px;margin-top:2px;accent-color:var(--accent)}
+.checks{display:grid;gap:8px;margin-top:4px}
+.prog{height:6px;background:var(--surface-2);border-radius:3px;overflow:hidden}.prog div{height:100%;background:var(--accent)}
+.stepn{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-top:-8px}
+.nav{display:flex;justify-content:space-between;gap:10px;margin-top:8px}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:6px;padding:12px 20px;font-weight:700;cursor:pointer}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+.btn:disabled{opacity:.6}
+.btn:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,.scale button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.rates{display:grid;gap:14px}
+.rate{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px}
+.rl{font-weight:600;margin-bottom:8px}
+.scale{display:grid;grid-template-columns:repeat(11,minmax(0,1fr));gap:3px}
+.scale button{height:42px;border:1px solid var(--line);background:var(--bg);border-radius:6px;font-weight:700;font-size:14px;cursor:pointer;padding:0}
+.scale button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+.alert{background:var(--warn-soft);border-radius:6px;padding:10px 12px}
+.note{font-size:13.5px;color:var(--muted)}
+
+:root{--s1:#1f7a3f;--s2:#1d4f91;--s3:#c77700;--s4:#a4161a}
+@media (prefers-color-scheme: dark){:root{--s1:#6fd193;--s2:#7fa8ec;--s3:#f0b35a;--s4:#f07a7d}}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;display:grid;gap:10px}
+h3{font-family:var(--display);font-size:22px;margin:0;font-weight:700}
+.tabs{display:flex;flex-wrap:wrap;gap:6px}
+.tabs button{border:1px solid var(--line);background:var(--bg);border-radius:999px;padding:6px 12px;font-weight:600;font-size:14px;cursor:pointer}
+.tabs button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:14px}
+.legend span{display:inline-flex;align-items:center;gap:6px}.legend i{width:12px;height:12px;border-radius:3px;display:inline-block}
+svg{width:100%;height:auto;display:block}
+table{width:100%;border-collapse:collapse;font-size:14px}th,td{text-align:left;padding:6px 4px;border-bottom:1px solid var(--line)}td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+.pill{display:inline-block;font-size:12px;font-weight:700;padding:2px 8px;border-radius:999px;background:var(--surface-2);color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.goal{border-top:1px solid var(--line);padding-top:10px;display:grid;gap:6px}.goal:first-of-type{border-top:0;padding-top:0}
+.acts{margin:0;padding:0;list-style:none;display:grid;gap:4px}.acts li{display:flex;gap:8px}.acts .tick{width:18px;flex:none;color:var(--accent);font-weight:700}
+.good{background:color-mix(in srgb,var(--accent) 12%,transparent);border-radius:6px;padding:10px 12px}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="js/config.js"></script>
+</head>
+<body>
+<div class="top" id="top">My development plan</div>
+<main class="body" id="app"><p class="lead">Loading…</p></main>
+<script>
+(function(){
+"use strict";
+const cfg=window.APP_CONFIG||{};
+document.getElementById("top").textContent=(cfg.clubName||"Cricket club")+" · my development plan";
+const code=(new URLSearchParams(location.hash.slice(1)).get("r")||"").trim();
+const sb=cfg.supabaseUrl&&!/YOUR-PROJECT/.test(cfg.supabaseUrl)?window.supabase.createClient(cfg.supabaseUrl,cfg.supabaseAnonKey,{auth:{persistSession:false}}):null;
+const app=document.getElementById("app");
+const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const fmt=d=>{if(!d)return"";const x=new Date(d+"T12:00:00");return isNaN(x)?d:x.toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"})};
+const COLORS=["var(--s1)","var(--s2)","var(--s3)","var(--s4)"];
+let R=null,mode="overview";
+function wrap(t,max){const w=String(t).split(" ");const out=[];let line="";w.forEach(x=>{if((line+" "+x).trim().length>max&&line){out.push(line);line=x}else line=(line+" "+x).trim()});if(line)out.push(line);return out}
+function chart(){let axes,series;
+  if(mode==="overview"){axes=R.axes;series=R.series.map((s,i)=>({name:s.name,color:COLORS[i%4],vals:s.ov}))}
+  else{const a=R.areas.find(x=>x.key===mode);axes=a.items;series=R.series.map((s,i)=>({name:s.name,color:COLORS[i%4],vals:(s.det&&s.det[mode])||[]})).filter(s=>s.vals.some(v=>v!=null))}
+  const ov=mode==="overview",fs=ov?28:22,lh=fs*1.1,W=640,Rr=ov?150:135,cx=W/2,cy=Rr+(ov?95:110),H=cy*2,n=axes.length;
+  const pt=(i,v)=>{const a=-Math.PI/2+i*2*Math.PI/n;return[cx+Math.cos(a)*Rr*v/10,cy+Math.sin(a)*Rr*v/10]};
+  let g="";
+  for(let l=2;l<=10;l+=2){g+=`<polygon points="${axes.map((_,i)=>pt(i,l).join(",")).join(" ")}" fill="none" stroke="var(--line)"/>`;const[x,y]=pt(0,l);g+=`<text x="${x+4}" y="${y+4}" font-size="16" fill="var(--muted)">${l}</text>`}
+  axes.forEach((ax,i)=>{const[x,y]=pt(i,10);g+=`<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="var(--line)"/>`;const[lx,ly]=pt(i,ov?11.4:11.3);const an=Math.abs(lx-cx)<8?"middle":lx>cx?"start":"end";const w=wrap(ax,ov?11:13);
+    g+=`<text x="${lx}" y="${ly-(w.length-1)*lh/2+fs*.35}" text-anchor="${an}" font-size="${fs}" font-weight="600" fill="var(--fg)">${w.map((t,j)=>`<tspan x="${lx}" dy="${j?lh:0}">${esc(t)}</tspan>`).join("")}</text>`});
+  series.forEach(s=>{const p=s.vals.map((v,i)=>pt(i,v??0));g+=`<polygon points="${p.map(q=>q.join(",")).join(" ")}" fill="${s.color}" fill-opacity=".14" stroke="${s.color}" stroke-width="2.5" stroke-linejoin="round"/>`;p.forEach((q,i)=>{if(s.vals[i]!=null)g+=`<circle cx="${q[0]}" cy="${q[1]}" r="3.5" fill="${s.color}"/>`})});
+  const svg=`<svg viewBox="-70 0 780 ${H}" role="img" aria-label="Spider chart of your ratings out of 10">${g}</svg>`;
+  const leg=`<div class="legend">${series.map(s=>`<span><i style="background:${s.color}"></i>${esc(s.name)}</span>`).join("")}</div>`;
+  const tbl=series.length?`<table><thead><tr><th>Skill</th>${series.map(s=>`<th class="n" style="color:${s.color}">${esc(s.name.split(" · ")[0])}</th>`).join("")}</tr></thead><tbody>${axes.map((a,i)=>`<tr><td>${esc(a)}</td>${series.map(s=>`<td class="n">${s.vals[i]==null?"–":(+s.vals[i]).toFixed(mode==="overview"?1:0)}</td>`).join("")}</tr>`).join("")}</tbody></table>`:"";
+  return svg+leg+tbl}
+function render(){
+  if(!R){app.innerHTML=`<h2>This link isn't working</h2><p class="lead">Ask your coach to send you a new link.</p>`;return}
+  const tabs=[["overview","Overview"],...R.areas.map(a=>[a.key,a.name])];
+  let h=`<div><h2>${esc(R.first?R.first+"'s":"My")} development plan</h2><p class="lead">${esc([R.squad,R.ageGroup].filter(Boolean).join(" · "))}${R.updated?" · updated "+esc(fmt(R.updated)):""}</p></div>`;
+  if(R.note)h+=`<section class="card"><h3>From your coach</h3><p style="margin:0;white-space:pre-wrap">${esc(R.note)}</p></section>`;
+  if(R.series.length){h+=`<section class="card"><h3>Your skills</h3><p class="note" style="margin:0">Ratings out of 10. "You" is your own rating, "Coach" is your coach's.</p><div class="tabs">${tabs.map(([k,l])=>`<button type="button" data-m="${esc(k)}" aria-pressed="${k===mode}">${esc(l)}</button>`).join("")}</div>${chart()}</section>`}
+  if(R.strengths.length||R.work.length)h+=`<section class="card"><h3>Where you are now</h3>${R.strengths.length?`<div class="good"><b>Strengths to build on:</b> ${R.strengths.map(esc).join(", ")}</div>`:""}${R.work.length?`<div class="alert"><b>Areas to work on:</b> ${R.work.map(esc).join(", ")}</div>`:""}</section>`;
+  if(R.goals.length)h+=`<section class="card"><h3>Your goals</h3>${R.goals.map((g,i)=>`<div class="goal"><div><span class="pill">Goal ${i+1}${g.corner?" · "+esc(g.corner):""}</span> ${g.status?`<span class="pill">${esc(g.status)}</span>`:""}</div><b>${esc(g.goal)}</b>${g.measure?`<div class="note">How we'll know: ${esc(g.measure)}</div>`:""}${g.target?`<div class="note">Target date: ${esc(fmt(g.target))}</div>`:""}${g.actions.length?`<ul class="acts">${g.actions.map(a=>`<li><span class="tick">${a.done?"✓":"○"}</span><span>${esc(a.text)}${a.owner?` <span class="note">(${esc(a.owner)}${a.due?", by "+esc(fmt(a.due)):""})</span>`:""}</span></li>`).join("")}</ul>`:""}</div>`).join("")}</section>`;
+  if(R.nextReview)h+=`<section class="card"><h3>Next review</h3><p style="margin:0">${esc(fmt(R.nextReview))}</p></section>`;
+  h+=`<p class="note">This page is just for you. Please don't share the link. Talk to your coach if anything here doesn't look right.</p>`;
+  app.innerHTML=h}
+app.addEventListener("click",e=>{const b=e.target.closest("[data-m]");if(b){mode=b.dataset.m;render()}});
+(async()=>{if(sb&&code.length>=10){const{data,error}=await sb.rpc("get_report",{code});if(error)console.warn(error);R=error?null:data}
+  if(R){R.series=R.series||[];R.areas=R.areas||[];R.axes=R.axes||[];R.goals=R.goals||[];R.strengths=R.strengths||[];R.work=R.work||[]}
+  render()})();
+})();
+</script>
+</body>
+</html>

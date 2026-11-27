@@ -37,3 +37,11 @@ No build step: it's plain HTML and JavaScript, with data stored in Supabase.
 
 ## Notes for changes
 `js/shared.js` copies the skill lists from `index.html` for the questionnaire. If you change skills in one, change the other.
+
+## Player view (r.html)
+
+On a player's page, click **Player view → Create player view** to get a private, read-only link (`r.html#r=CODE`).
+It shows the spider chart, strengths and areas to work on, IDP goals and actions, and the next review date, plus an optional
+message from the coach. It never shows profile answers, medical details, bowling action notes or session notes.
+The dashboard rebuilds that summary every time it saves the player; **Stop sharing** switches the link off.
+Needs the `report_code` column and `get_report` function at the bottom of `supabase/schema.sql`.

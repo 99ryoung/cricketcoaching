@@ -80,3 +80,14 @@ revoke all on function public.get_invite(text) from public;
 revoke all on function public.submit_questionnaire(text, jsonb) from public;
 grant execute on function public.get_invite(text) to anon, authenticated;
 grant execute on function public.submit_questionnaire(text, jsonb) to anon, authenticated;
+
+-- Player view (r.html): a read-only page a player can open with their own link.
+-- Returns only the summary the coach dashboard prepares for the player, nothing else.
+alter table public.players add column if not exists report_code text unique;
+create or replace function public.get_report(code text)
+returns json language sql stable security definer set search_path = public as $$
+  select (data->'report')::json from public.players
+  where report_code = code and length(code) >= 10;
+$$;
+revoke all on function public.get_report(text) from public;
+grant execute on function public.get_report(text) to anon, authenticated;
