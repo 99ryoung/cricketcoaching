@@ -954,7 +954,7 @@ const inviteURL=code=>location.origin+location.pathname.replace(/[^/]*$/,"")+"q.
 function newCode(){const a="abcdefghjkmnpqrstuvwxyz23456789";let s="";const r=crypto.getRandomValues(new Uint8Array(12));r.forEach(n=>s+=a[n%a.length]);return s}
 async function refreshPending(){try{pending=await window.coachBackend.fetchResponses()}catch(e){pending=[]}await applyPlayerEdits();renderRoster();if(local)addAppBits()}
 const pendingFor=p=>p&&p.inviteCode?pending.filter(r=>r.invite_code===p.inviteCode):[];
-function addAppBits(){const m=$("#main");if(!m||!local)return;const head=m.querySelector(".phead .row");
+function addAppBits(){const m=$("#main");if(!m||!local)return;if(local.reportCode&&(!local.report||local.report.v!==REPORT_V||JSON.stringify(local.report.sessions||[])!==JSON.stringify(buildReport(local).sessions)))scheduleSave();const head=m.querySelector(".phead .row");
   if(head&&!head.querySelector("[data-act=inviteToggle]")){const b=document.createElement("button");b.className="btn";b.type="button";b.dataset.act="inviteToggle";b.textContent="Questionnaire link";head.insertBefore(b,head.firstChild)}
   if(head&&!head.querySelector("[data-act=reportToggle]")){const b=document.createElement("button");b.className="btn";b.type="button";b.dataset.act="reportToggle";b.textContent="Player view";head.insertBefore(b,head.firstChild.nextSibling)}
   m.querySelectorAll(".app-box").forEach(x=>x.remove());
